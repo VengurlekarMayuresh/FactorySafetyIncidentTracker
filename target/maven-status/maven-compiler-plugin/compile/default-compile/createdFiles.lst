@@ -1,1 +1,8 @@
+com\factory\safety\repository\IncidentRepository.class
+com\factory\safety\controller\IncidentController.class
+com\factory\safety\service\IncidentServiceImpl.class
+com\factory\safety\model\Severity.class
+com\factory\safety\model\Incident.class
+com\factory\safety\model\Status.class
 com\factory\safety\IncidentTrackerApplication.class
+com\factory\safety\service\IncidentService.class
