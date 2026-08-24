@@ -76,4 +76,26 @@ class IncidentServiceTest {
         assertEquals(Status.IN_PROGRESS, updated.getStatus());
         verify(incidentRepository, times(1)).save(any(Incident.class));
     }
+
+    @Test
+    void testSearchIncidents() {
+        Incident incident = new Incident("Spill", "Acid spill", Severity.HIGH, "Hall A", "Worker 1");
+        when(incidentRepository.findFilteredIncidents(Status.OPEN, Severity.HIGH, "Hall")).thenReturn(Arrays.asList(incident));
+
+        List<Incident> searchResults = incidentService.searchIncidents(Status.OPEN, Severity.HIGH, "Hall");
+
+        assertEquals(1, searchResults.size());
+        verify(incidentRepository, times(1)).findFilteredIncidents(Status.OPEN, Severity.HIGH, "Hall");
+    }
+
+    @Test
+    void testCounts() {
+        when(incidentRepository.countByStatus(Status.OPEN)).thenReturn(5L);
+        when(incidentRepository.countByStatus(Status.CLOSED)).thenReturn(3L);
+        when(incidentRepository.countBySeverityAndStatusNot(Severity.HIGH, Status.CLOSED)).thenReturn(2L);
+
+        assertEquals(5L, incidentService.countOpenIncidents());
+        assertEquals(3L, incidentService.countClosedIncidents());
+        assertEquals(2L, incidentService.countUnresolvedHighSeverity());
+    }
 }
