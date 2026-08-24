@@ -1,6 +1,7 @@
 package com.factory.safety.service;
 
 import com.factory.safety.model.Incident;
+import com.factory.safety.model.Severity;
 import com.factory.safety.model.Status;
 import com.factory.safety.repository.IncidentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,5 +39,25 @@ public class IncidentServiceImpl implements IncidentService {
         Incident incident = getIncidentById(id);
         incident.setStatus(status);
         return incidentRepository.save(incident);
+    }
+
+    @Override
+    public List<Incident> searchIncidents(Status status, Severity severity, String location) {
+        return incidentRepository.findFilteredIncidents(status, severity, location);
+    }
+
+    @Override
+    public long countOpenIncidents() {
+        return incidentRepository.countByStatus(Status.OPEN);
+    }
+
+    @Override
+    public long countClosedIncidents() {
+        return incidentRepository.countByStatus(Status.CLOSED);
+    }
+
+    @Override
+    public long countUnresolvedHighSeverity() {
+        return incidentRepository.countBySeverityAndStatusNot(Severity.HIGH, Status.CLOSED);
     }
 }
