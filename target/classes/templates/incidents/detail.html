@@ -54,6 +54,26 @@
                         <div class="col-sm-3 fw-bold">Resolved At:</div>
                         <div class="col-sm-9" th:text="${#temporals.format(incident.resolvedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-08-25 00:00:00</div>
                     </div>
+
+                    <hr>
+
+                    <!-- Update Status -->
+                    <form th:action="@{/incidents/{id}/status(id=${incident.id})}" method="post" class="row g-3 align-items-center mt-3">
+                        <div class="col-auto">
+                            <label for="updateStatus" class="form-label mb-0 fw-bold">Update Status:</label>
+                        </div>
+                        <div class="col-auto">
+                            <select id="updateStatus" name="status" class="form-select form-select-sm">
+                                <option th:each="st : ${statuses}" 
+                                        th:value="${st}" 
+                                        th:text="${st}" 
+                                        th:selected="${st == incident.status}"></option>
+                            </select>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-sm btn-dark">Update</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
