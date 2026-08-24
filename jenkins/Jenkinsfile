@@ -1,0 +1,82 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven-3'
+        jdk 'JDK-17'
+    }
+
+    parameters {
+        choice(
+            name: 'ENV',
+            choices: ['dev', 'staging'],
+            description: 'Target deployment environment'
+        )
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                echo "Checking out source from repository..."
+                // For local build, source is already present.
+                // For GitHub integration, replace with:
+                // git branch: 'develop',
+                //     credentialsId: 'github-token',
+                //     url: 'https://github.com/<YOU>/factory-safety-incident-tracker.git'
+                echo "Checkout complete."
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo "Building the application..."
+                sh './mvnw clean compile'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo "Running unit tests..."
+                sh './mvnw test'
+            }
+            post {
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                echo "Packaging the application JAR..."
+                sh './mvnw package -DskipTests'
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                expression { currentBuild.currentResult == 'SUCCESS' }
+            }
+            steps {
+                echo "Deploying to environment: ${params.ENV}"
+                // In Week 8, this will copy WAR to Tomcat or run a Docker container.
+                echo "Deploy step will be fully wired in Week 8 (Jenkinsfile + Tomcat/Docker)."
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline finished successfully! Build: ${BUILD_NUMBER}"
+        }
+        failure {
+            echo "Pipeline FAILED! Check the console output for details."
+        }
+    }
+}

@@ -35,3 +35,12 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Maven ###
+target/
+*.jar
+*.war
+
+### Jenkins ###
+jenkins/jenkins.war
+jenkins/jenkins_home/
