@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @Controller
 @RequestMapping("/incidents")
 public class IncidentController {
+    // Conflict Simulation: Modification from conflict-a branch
 
     private final IncidentService incidentService;
 
