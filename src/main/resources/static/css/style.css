@@ -1,0 +1,117 @@
+/* Custom Styles for Safety Incident Tracker */
+:root {
+    --primary-bg: #f4f7f6;
+    --card-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    --navbar-bg: #1e2b3c;
+}
+
+body {
+    background-color: var(--primary-bg);
+    font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #495057;
+}
+
+/* Navbar */
+.navbar-custom {
+    background: linear-gradient(90deg, var(--navbar-bg) 0%, #2a3f54 100%);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    padding: 1rem 2rem;
+}
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    font-size: 1.4rem;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 1.5rem;
+}
+.card-header {
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+    background-color: #fff;
+    border-bottom: 1px solid #e3e6f0;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+}
+
+/* Metric Cards */
+.metric-card {
+    border-radius: 12px;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    cursor: pointer;
+    color: #fff;
+}
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 2rem 0 rgba(58, 59, 69, 0.25);
+}
+.bg-gradient-primary { background: linear-gradient(135deg, #4e73df 0%, #224abe 100%); }
+.bg-gradient-success { background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%); }
+.bg-gradient-danger  { background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%); }
+
+.metric-card i {
+    opacity: 0.4;
+    transition: transform 0.2s ease;
+}
+.metric-card:hover i {
+    transform: scale(1.1);
+    opacity: 0.6;
+}
+
+/* Tables */
+.table-container {
+    border-radius: 12px;
+    overflow: hidden;
+}
+.table {
+    margin-bottom: 0;
+}
+.table thead th {
+    border-bottom: 2px solid #e3e6f0;
+    background-color: #f8f9fc;
+    color: #4e73df;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    padding: 1rem;
+}
+.table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+/* Badges */
+.badge {
+    padding: 0.5em 0.75em;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+/* Forms */
+.form-control, .form-select {
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.form-control:focus, .form-select:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 8px;
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.btn-primary { background-color: #4e73df; border-color: #4e73df; }
+.btn-primary:hover { background-color: #2e59d9; border-color: #2653d4; }
+.btn-danger { background-color: #e74a3b; border-color: #e74a3b; }
+.btn-danger:hover { background-color: #be2617; border-color: #be2617; }

@@ -3,55 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <title>Report Safety Incident</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
-<body class="bg-light">
-<div class="container mt-5">
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-5">
+    <div class="container-fluid">
+        <a class="navbar-brand" th:href="@{/incidents}">
+            <i class="fa-solid fa-shield-halved me-2"></i> Factory Safety Tracker
+        </a>
+        <div class="ms-auto">
+            <a th:href="@{/incidents}" class="btn btn-outline-light btn-sm">
+                <i class="fa-solid fa-house me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</nav>
+
+<div class="container pb-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-danger text-white">
-                    <h3 class="card-title mb-0">Report Safety Incident</h3>
+        <div class="col-lg-8 col-md-10">
+            
+            <div class="card shadow border-0">
+                <div class="card-header bg-white py-3 d-flex align-items-center border-bottom-0">
+                    <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+                        <i class="fa-solid fa-triangle-exclamation fs-5"></i>
+                    </div>
+                    <h3 class="card-title mb-0 fw-bold text-gray-800">Report Safety Incident</h3>
                 </div>
-                <div class="card-body">
+                
+                <div class="card-body p-4 p-md-5 pt-2">
+                    <p class="text-muted mb-4">Please provide detailed information about the safety hazard or incident. If this is an immediate life-threatening emergency, please call site security first.</p>
+                    
                     <form th:action="@{/incidents}" th:object="${incident}" method="post">
                         
-                        <div class="mb-3">
-                            <label for="title" class="form-label">Incident Title</label>
-                            <input type="text" id="title" th:field="*{title}" class="form-label form-control" required placeholder="e.g., Oil spill on floor">
+                        <div class="form-floating mb-4">
+                            <input type="text" id="title" th:field="*{title}" class="form-control" required placeholder="Title">
+                            <label for="title">Incident Title (e.g., Oil spill on floor)</label>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="description" class="form-label">Description</label>
-                            <textarea id="description" th:field="*{description}" class="form-control" rows="4" required placeholder="Describe the incident in detail, including hazard details..."></textarea>
+                        <div class="form-floating mb-4">
+                            <textarea id="description" th:field="*{description}" class="form-control" style="height: 120px" required placeholder="Description"></textarea>
+                            <label for="description">Detailed Description</label>
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="location" class="form-label">Location / Area</label>
-                                <input type="text" id="location" th:field="*{location}" class="form-control" required placeholder="e.g., Assembly Line B">
+                            <div class="col-md-6 mb-4">
+                                <div class="form-floating">
+                                    <input type="text" id="location" th:field="*{location}" class="form-control" required placeholder="Location">
+                                    <label for="location">Location / Area</label>
+                                </div>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="severity" class="form-label">Severity Level</label>
-                                <select id="severity" th:field="*{severity}" class="form-select" required>
-                                    <option value="" disabled selected>Select severity...</option>
-                                    <option th:each="sev : ${severities}" th:value="${sev}" th:text="${sev}"></option>
-                                </select>
+                            <div class="col-md-6 mb-4">
+                                <div class="form-floating">
+                                    <select id="severity" th:field="*{severity}" class="form-select" required>
+                                        <option value="" disabled selected>Select severity...</option>
+                                        <option th:each="sev : ${severities}" th:value="${sev}" th:text="${sev}"></option>
+                                    </select>
+                                    <label for="severity">Severity Level</label>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="reportedBy" class="form-label">Reported By (Your Name/ID)</label>
-                            <input type="text" id="reportedBy" th:field="*{reportedBy}" class="form-control" required placeholder="e.g., Worker #405">
+                        <div class="form-floating mb-5">
+                            <input type="text" id="reportedBy" th:field="*{reportedBy}" class="form-control" required placeholder="Your Name">
+                            <label for="reportedBy">Reported By (Your Name/ID)</label>
                         </div>
 
-                        <div class="d-flex justify-content-between mt-4">
-                            <a th:href="@{/incidents}" class="btn btn-secondary">Cancel & View List</a>
-                            <button type="submit" id="submit" class="btn btn-danger">Submit Incident Report</button>
+                        <hr class="mb-4">
+
+                        <div class="d-flex justify-content-end gap-3">
+                            <a th:href="@{/incidents}" class="btn btn-light border px-4 py-2 fw-bold text-muted">Cancel</a>
+                            <button type="submit" id="submit" class="btn btn-danger px-4 py-2 fw-bold shadow-sm">
+                                <i class="fa-solid fa-paper-plane me-2"></i> Submit Report
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
+            
         </div>
     </div>
 </div>
