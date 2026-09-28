@@ -15,30 +15,23 @@ pipeline {
         string(
             name: 'APP_PORT',
             defaultValue: '8080',
-            description: 'Port to run the deployed application on'
+            description: 'Port to map for the deployed Docker container'
         )
     }
 
     environment {
-        APP_NAME     = 'incident-tracker'
+        APP_NAME     = 'factory-safety-incident-tracker'
         JAR_NAME     = 'incident-tracker-0.0.1-SNAPSHOT.jar'
-        DEPLOY_DIR   = "C:\\deploy\\${params.ENV}"
-        PROPS_FILE   = "src/main/resources/application-${params.ENV}.properties"
+        IMAGE_NAME   = "factory-safety-incident-tracker"
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 echo "=============================="
                 echo " Stage: Checkout"
-                echo " Environment: ${params.ENV}"
                 echo "=============================="
-                // For local build the source is already on disk.
-                // For GitHub-connected Jenkins, replace with:
-                // git branch: 'develop',
-                //     credentialsId: 'github-token',
-                //     url: 'https://github.com/<YOU>/factory-safety-incident-tracker.git'
+                // Replace with actual git checkout for real CI
                 echo "Source code ready."
             }
         }
@@ -55,16 +48,18 @@ pipeline {
         stage('Test') {
             steps {
                 echo "=============================="
-                echo " Stage: Test"
+                echo " Stage: Selenium & Unit Tests"
                 echo "=============================="
                 bat './mvnw.cmd test'
             }
             post {
                 always {
                     junit '**/target/surefire-reports/*.xml'
+                    // Archive screenshots if there were any failures
+                    archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
                 }
                 failure {
-                    echo "Tests FAILED — blocking deployment!"
+                    echo "Tests FAILED - blocking deployment! Check screenshots in artifacts."
                 }
             }
         }
@@ -76,48 +71,38 @@ pipeline {
                 echo "=============================="
                 bat "./mvnw.cmd package -DskipTests -Dspring.profiles.active=${params.ENV}"
             }
-            post {
-                success {
-                    archiveArtifacts artifacts: "**/target/${env.JAR_NAME}", fingerprint: true
-                    echo "Artifact archived: ${env.JAR_NAME}"
-                }
+        }
+
+        stage('Docker Build') {
+            steps {
+                echo "=============================="
+                echo " Stage: Docker Build"
+                echo "=============================="
+                bat "docker build -t ${env.IMAGE_NAME}:${BUILD_NUMBER} -t ${env.IMAGE_NAME}:latest ."
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy (Docker)') {
             when {
                 expression { currentBuild.currentResult == 'SUCCESS' }
             }
             steps {
                 echo "=============================="
-                echo " Stage: Deploy to ${params.ENV}"
-                echo " Port: ${params.APP_PORT}"
+                echo " Stage: Deploy Docker Container to ${params.ENV}"
                 echo "=============================="
 
-                // Create deploy directory if it doesn't exist
-                bat "if not exist \"${env.DEPLOY_DIR}\" mkdir \"${env.DEPLOY_DIR}\""
-
-                // Copy JAR to deploy directory
-                bat "copy /Y target\\${env.JAR_NAME} ${env.DEPLOY_DIR}\\${env.APP_NAME}-${params.ENV}.jar"
-
-                // Stop existing process if running (Windows: find and kill by port)
+                // Stop and remove existing container if it exists
                 bat """
-                    for /f \"tokens=5\" %%a in ('netstat -aon ^| findstr :${params.APP_PORT} ^| findstr LISTENING') do (
-                        echo Stopping process on port ${params.APP_PORT} PID=%%a
-                        taskkill /PID %%a /F 2>nul || echo No process to kill
-                    )
+                    docker stop ${env.APP_NAME}-${params.ENV} || echo "No container to stop"
+                    docker rm ${env.APP_NAME}-${params.ENV} || echo "No container to remove"
                 """
 
-                // Start the application in background
+                // Run new container
                 bat """
-                    start /B javaw -jar ${env.DEPLOY_DIR}\\${env.APP_NAME}-${params.ENV}.jar ^
-                        --server.port=${params.APP_PORT} ^
-                        --spring.profiles.active=${params.ENV} ^
-                        > ${env.DEPLOY_DIR}\\app.log 2>&1
+                    docker run -d --name ${env.APP_NAME}-${params.ENV} -p ${params.APP_PORT}:8080 ^
+                        -e SPRING_PROFILES_ACTIVE=${params.ENV} ^
+                        ${env.IMAGE_NAME}:${BUILD_NUMBER}
                 """
-
-                echo "Application started at http://localhost:${params.APP_PORT}/incidents"
-                echo "Logs: ${env.DEPLOY_DIR}\\app.log"
             }
         }
     }
@@ -125,18 +110,14 @@ pipeline {
     post {
         success {
             echo "============================================"
-            echo " PIPELINE SUCCESS — Build #${BUILD_NUMBER}"
-            echo " App running at: http://localhost:${params.APP_PORT}/incidents"
+            echo " PIPELINE SUCCESS - Build #${BUILD_NUMBER}"
+            echo " Container deployed to http://localhost:${params.APP_PORT}/incidents"
             echo "============================================"
         }
         failure {
             echo "============================================"
-            echo " PIPELINE FAILED — Build #${BUILD_NUMBER}"
-            echo " Check console output for details."
+            echo " PIPELINE FAILED - Build #${BUILD_NUMBER}"
             echo "============================================"
-        }
-        always {
-            echo "Pipeline completed for ENV=${params.ENV}, Build=${BUILD_NUMBER}"
         }
     }
 }

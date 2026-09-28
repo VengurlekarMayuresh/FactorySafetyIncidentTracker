@@ -1,2 +1,3 @@
 com\factory\safety\IncidentTrackerApplicationTests.class
+com\factory\safety\selenium\IncidentTrackerE2ETest.class
 com\factory\safety\service\IncidentServiceTest.class
