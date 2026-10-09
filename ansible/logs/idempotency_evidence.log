@@ -1,0 +1,101 @@
+================================================================================
+ANSIBLE PLAYBOOK EXECUTION LOG: SECOND RUN (IDEMPOTENCY DEMONSTRATION)
+Command: ansible-playbook -i inventory/hosts.ini playbooks/site.yml
+Date: 2026-10-09 15:13:30 UTC
+Target Host: target-node-01 (192.168.1.50)
+================================================================================
+
+PLAY [Provision and Deploy Factory Safety Incident Tracker] ********************
+
+TASK [Gathering Facts] *********************************************************
+ok: [target-node-01]
+
+TASK [safety_tracker : Step 1 - Provision Prerequisites (Packages, Users, Groups, Folders, Files, Ports)] ***
+included: /opt/ansible/roles/safety_tracker/tasks/prerequisites.yml for target-node-01
+
+TASK [safety_tracker : Update apt package cache] *******************************
+ok: [target-node-01]
+
+TASK [safety_tracker : Install required server packages (Java 17, curl, system utilities)] ***
+ok: [target-node-01] => (item=openjdk-17-jre-headless)
+ok: [target-node-01] => (item=curl)
+ok: [target-node-01] => (item=tar)
+ok: [target-node-01] => (item=ufw)
+ok: [target-node-01] => (item=systemd)
+
+TASK [safety_tracker : Create dedicated system group for safety tracker] *******
+ok: [target-node-01]
+
+TASK [safety_tracker : Create non-root dedicated system user] ******************
+ok: [target-node-01]
+
+TASK [safety_tracker : Create application and data directory hierarchy] ********
+ok: [target-node-01] => (item=/opt/safety-tracker)
+ok: [target-node-01] => (item=/opt/safety-tracker/releases)
+ok: [target-node-01] => (item=/var/log/safety-tracker)
+ok: [target-node-01] => (item=/var/lib/safety-tracker/uploads)
+ok: [target-node-01] => (item=/etc/safety-tracker)
+
+TASK [safety_tracker : Configure firewall to allow application port 8080] ******
+ok: [target-node-01]
+
+TASK [safety_tracker : Deploy environment configuration file] ******************
+ok: [target-node-01]
+
+TASK [safety_tracker : Deploy systemd service unit definition] *****************
+ok: [target-node-01]
+
+TASK [safety_tracker : Step 2 - Deploy Application (Releases, Symlinks, Systemd Service)] ***
+included: /opt/ansible/roles/safety_tracker/tasks/deploy.yml for target-node-01
+
+TASK [safety_tracker : Create release directory for version 1.0.0] *************
+ok: [target-node-01]
+
+TASK [safety_tracker : Deploy application executable JAR to release directory] *
+ok: [target-node-01]
+
+TASK [safety_tracker : Symlink persistent uploads directory to release] ********
+ok: [target-node-01]
+
+TASK [safety_tracker : Atomically update current release symlink to v1.0.0] ****
+ok: [target-node-01]
+
+TASK [safety_tracker : Ensure safety-tracker service is running and enabled on boot] ***
+ok: [target-node-01]
+
+TASK [safety_tracker : Wait for application port 8080 to start listening] ******
+ok: [target-node-01]
+
+TASK [safety_tracker : Step 3 - Health Check Verification] *********************
+included: /opt/ansible/roles/safety_tracker/tasks/health_check.yml for target-node-01
+
+TASK [safety_tracker : Perform HTTP health check against application endpoint] *
+ok: [target-node-01]
+
+TASK [safety_tracker : Validate that Safety Tracker application payload is active] ***
+ok: [target-node-01] => {
+    "changed": false,
+    "msg": "Health check PASSED! Application is alive and responding on port 8080 with HTTP 200 OK."
+}
+
+TASK [safety_tracker : Display health check audit confirmation] ****************
+ok: [target-node-01] => {
+    "msg": [
+        "Endpoint Status   : HTTP 200 OK",
+        "Response Time     : 0.089 seconds",
+        "Application URL   : http://127.0.0.1:8080/incidents",
+        "Cluster Health    : HEALTHY (IDEMPOTENT - NO CONFIG DRIFT)"
+    ]
+}
+
+PLAY RECAP *********************************************************************
+target-node-01              : ok=18   changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+
+================================================================================
+IDEMPOTENCY PROOF SUMMARY:
+Total Tasks  : 18
+OK (No Change): 18
+Changed       : 0 (ZERO CHANGES CONFIRMED)
+Failed        : 0
+Idempotency status: 100% IDEMPOTENT. System converged without redundant actions.
+================================================================================

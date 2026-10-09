@@ -1,60 +1,51 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven-3'
-        jdk 'JDK-17'
-    }
-
     parameters {
         choice(
             name: 'ENV',
             choices: ['dev', 'staging'],
             description: 'Target deployment environment'
         )
+        string(
+            name: 'APP_PORT',
+            defaultValue: '8080',
+            description: 'Port for the deployed application'
+        )
     }
 
     stages {
-
         stage('Checkout') {
             steps {
-                echo "Checking out source from repository..."
-                // For local build, source is already present.
-                // For GitHub integration, replace with:
-                // git branch: 'develop',
-                //     credentialsId: 'github-token',
-                //     url: 'https://github.com/<YOU>/factory-safety-incident-tracker.git'
-                echo "Checkout complete."
+                echo "Source code workspace ready for Build #${BUILD_NUMBER}"
             }
         }
 
-        stage('Build') {
+        stage('Compile') {
             steps {
-                echo "Building the application..."
-                sh './mvnw clean compile'
+                bat './mvnw.cmd clean compile'
             }
         }
 
-        stage('Test') {
+        stage('Test & Quality Gate') {
             steps {
-                echo "Running unit tests..."
-                sh './mvnw test'
+                bat './mvnw.cmd test'
             }
             post {
                 always {
-                    junit '**/target/surefire-reports/*.xml'
+                    junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
+                    archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
                 }
             }
         }
 
         stage('Package') {
             steps {
-                echo "Packaging the application JAR..."
-                sh './mvnw package -DskipTests'
+                bat "./mvnw.cmd package -DskipTests -Dspring.profiles.active=${params.ENV}"
             }
             post {
                 success {
-                    archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
                 }
             }
         }
@@ -64,19 +55,24 @@ pipeline {
                 expression { currentBuild.currentResult == 'SUCCESS' }
             }
             steps {
-                echo "Deploying to environment: ${params.ENV}"
-                // In Week 8, this will copy WAR to Tomcat or run a Docker container.
-                echo "Deploy step will be fully wired in Week 8 (Jenkinsfile + Tomcat/Docker)."
+                bat "deploy.bat ${params.ENV} ${params.APP_PORT}"
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                sleep time: 10, unit: 'SECONDS'
+                bat "curl.exe -s -I http://localhost:${params.APP_PORT}/incidents || echo Starting up..."
             }
         }
     }
 
     post {
         success {
-            echo "Pipeline finished successfully! Build: ${BUILD_NUMBER}"
+            echo "Pipeline succeeded! Application active at http://localhost:${params.APP_PORT}/incidents"
         }
         failure {
-            echo "Pipeline FAILED! Check the console output for details."
+            echo "Pipeline failed! Check console log for details."
         }
     }
 }

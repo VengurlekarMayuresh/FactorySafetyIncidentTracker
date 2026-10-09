@@ -1,0 +1,13 @@
+---
+# ==============================================================================
+# Playbook: Health Check and Verification
+# Usage: ansible-playbook -i inventory/hosts.ini playbooks/health_check.yml
+# ==============================================================================
+- name: Verify Health and Status of Safety Tracker Service
+  hosts: safety_tracker
+  become: no
+  tasks:
+    - name: Run health check tasks
+      include_role:
+        name: safety_tracker
+        tasks_from: health_check

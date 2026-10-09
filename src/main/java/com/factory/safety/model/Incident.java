@@ -36,6 +36,17 @@ public class Incident {
 
     private LocalDateTime resolvedAt;
 
+    @Column(length = 500)
+    private String photoUrl;
+
+    @Column(length = 500)
+    private String resolutionPhotoUrl;
+
+    @Column(length = 1000)
+    private String resolutionNotes;
+
+    private String resolvedBy;
+
     // Constructors
     public Incident() {
         this.reportedAt = LocalDateTime.now();
@@ -127,5 +138,37 @@ public class Incident {
 
     public void setResolvedAt(LocalDateTime resolvedAt) {
         this.resolvedAt = resolvedAt;
+    }
+
+    public String getPhotoUrl() {
+        return photoUrl;
+    }
+
+    public void setPhotoUrl(String photoUrl) {
+        this.photoUrl = photoUrl;
+    }
+
+    public String getResolutionPhotoUrl() {
+        return resolutionPhotoUrl;
+    }
+
+    public void setResolutionPhotoUrl(String resolutionPhotoUrl) {
+        this.resolutionPhotoUrl = resolutionPhotoUrl;
+    }
+
+    public String getResolutionNotes() {
+        return resolutionNotes;
+    }
+
+    public void setResolutionNotes(String resolutionNotes) {
+        this.resolutionNotes = resolutionNotes;
+    }
+
+    public String getResolvedBy() {
+        return resolvedBy;
+    }
+
+    public void setResolvedBy(String resolvedBy) {
+        this.resolvedBy = resolvedBy;
     }
 }

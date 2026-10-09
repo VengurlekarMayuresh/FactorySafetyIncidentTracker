@@ -1,0 +1,6 @@
+---
+# Defaults for safety_tracker role
+app_version: "1.0.0"
+previous_version: "0.9.0"
+app_port: 8080
+app_profile: "dev"

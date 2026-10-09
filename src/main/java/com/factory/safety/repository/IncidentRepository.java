@@ -25,4 +25,6 @@ public interface IncidentRepository extends JpaRepository<Incident, Long> {
         @Param("severity") Severity severity,
         @Param("location") String location
     );
+
+    List<Incident> findByReportedByOrderByReportedAtDesc(String reportedBy);
 }

@@ -1,0 +1,25 @@
+[Unit]
+Description=Factory Safety Incident Tracker Service
+After=network.target syslog.target
+
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ app_current_dir }}
+EnvironmentFile=-{{ app_config_dir }}/incident-tracker.env
+ExecStart=/usr/bin/java -Djava.security.egd=file:/dev/./urandom -jar {{ app_current_dir }}/{{ remote_jar_name }} --server.port={{ app_port }} --spring.profiles.active={{ app_profile }}
+Restart=always
+RestartSec=10
+StandardOutput=append:{{ app_log_dir }}/application.log
+StandardError=append:{{ app_log_dir }}/error.log
+SuccessExitStatus=143
+
+# Security Sandboxing Primitives
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,45 @@
+---
+# ==============================================================================
+# Global Variables for Factory Safety Incident Tracker Configuration
+# ==============================================================================
+
+# Application Meta & Versions
+app_name: "safety-tracker"
+app_version: "1.0.0"
+previous_version: "0.9.0"
+
+# Service & Network Configuration
+app_port: 8080
+app_env: "production"
+app_profile: "dev"  # Dev/staging uses H2 mem database, production can use PostgreSQL/MySQL
+
+# Server Prerequisites: System Users & Groups
+app_user: "safetyapp"
+app_group: "safetyapp"
+app_user_shell: "/sbin/nologin"
+app_user_home: "/var/lib/safety-tracker"
+
+# Server Prerequisites: Directories
+app_base_dir: "/opt/safety-tracker"
+app_releases_dir: "{{ app_base_dir }}/releases"
+app_current_dir: "{{ app_base_dir }}/current"
+app_config_dir: "/etc/safety-tracker"
+app_log_dir: "/var/log/safety-tracker"
+app_uploads_dir: "/var/lib/safety-tracker/uploads"
+
+# Server Prerequisites: Packages
+required_packages:
+  - openjdk-17-jre-headless
+  - curl
+  - tar
+  - ufw
+  - systemd
+
+# Local Artifact Path (built by Maven)
+local_jar_source: "../target/incident-tracker-0.0.1-SNAPSHOT.jar"
+remote_jar_name: "incident-tracker.jar"
+
+# Health Check Settings
+health_check_url: "http://127.0.0.1:{{ app_port }}/incidents"
+health_check_retries: 15
+health_check_delay: 3

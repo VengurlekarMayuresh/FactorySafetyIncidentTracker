@@ -2,9 +2,10 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Safety Incidents Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safety Incidents Dashboard - SafeGuard</title>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome -->
@@ -15,33 +16,121 @@
 <body>
 
 <!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4">
-    <div class="container-fluid">
-        <a class="navbar-brand" th:href="@{/incidents}">
-            <i class="fa-solid fa-shield-halved me-2"></i> Factory Safety Tracker
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top mb-4">
+    <div class="container-fluid px-lg-4">
+        <a class="navbar-brand d-flex align-items-center" th:href="@{/incidents}">
+            <div class="brand-icon-nav me-2">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <span>Factory Safety Tracker</span>
         </a>
-        <div class="ms-auto">
-            <a th:href="@{/incidents/new}" class="btn btn-danger shadow-sm">
-                <i class="fa-solid fa-plus me-1"></i> Log New Incident
+        
+        <div class="d-flex align-items-center gap-3 ms-auto">
+            <!-- Active Role Pill -->
+            <div th:if="${currentUser != null}">
+                <span th:if="${currentUser.isAdmin()}" class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fw-semibold">
+                    <i class="fa-solid fa-user-shield me-1"></i> Admin Console
+                </span>
+                <span th:unless="${currentUser.isAdmin()}" class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fw-semibold">
+                    <i class="fa-solid fa-user-hard-hat me-1"></i> Worker Portal
+                </span>
+            </div>
+
+            <!-- Role Switcher -->
+            <a th:if="${currentUser != null && currentUser.isAdmin()}" th:href="@{/demo-login(role='USER')}" class="btn btn-outline-light btn-sm" title="Switch to Worker Mode">
+                <i class="fa-solid fa-arrows-rotate me-1"></i> Switch to Worker
+            </a>
+            <a th:if="${currentUser != null && !currentUser.isAdmin()}" th:href="@{/demo-login(role='ADMIN')}" class="btn btn-outline-warning btn-sm" title="Switch to Admin Mode">
+                <i class="fa-solid fa-user-shield me-1"></i> Switch to Admin
+            </a>
+
+            <!-- Notification Bell Dropdown -->
+            <div class="dropdown">
+                <button class="btn btn-dark position-relative notification-btn border border-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="notificationDropdownBtn">
+                    <i class="fa-regular fa-bell"></i>
+                    <span th:if="${unreadNotificationsCount > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" th:text="${unreadNotificationsCount}">
+                        1
+                    </span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow notification-dropdown p-2" style="width: 330px;" aria-labelledby="notificationDropdownBtn">
+                    <li class="d-flex justify-content-between align-items-center px-2 py-1 border-bottom mb-2">
+                        <span class="fw-bold small text-dark"><i class="fa-solid fa-bell me-1 text-primary"></i> Notifications</span>
+                        <form th:action="@{/notifications/read-all}" method="post" class="m-0">
+                            <button type="submit" class="btn btn-link btn-sm text-decoration-none p-0 text-muted" style="font-size: 0.75rem;">Mark all as read</button>
+                        </form>
+                    </li>
+                    <li th:if="${#lists.isEmpty(recentNotifications)}" class="text-center py-3 text-muted small">
+                        <i class="fa-regular fa-bell-slash fa-2x mb-2 text-black-50"></i>
+                        <div>No new notifications</div>
+                    </li>
+                    <li th:each="notif : ${recentNotifications}" class="notification-item p-2 rounded mb-1" th:classappend="${!notif.isRead() ? 'bg-light border-start border-3 border-primary' : ''}">
+                        <div class="d-flex align-items-start">
+                            <i class="fa-solid fa-circle-info text-primary mt-1 me-2"></i>
+                            <div class="flex-grow-1">
+                                <a th:if="${notif.incidentId != null}" th:href="@{/incidents/{id}(id=${notif.incidentId})}" class="text-decoration-none">
+                                    <div class="small fw-bold text-dark" th:text="${notif.title}">Title</div>
+                                </a>
+                                <div th:unless="${notif.incidentId != null}" class="small fw-bold text-dark" th:text="${notif.title}">Title</div>
+                                <div class="text-muted" style="font-size: 0.78rem;" th:text="${notif.message}">Message</div>
+                                <div class="text-black-50" style="font-size: 0.7rem;" th:text="${#temporals.format(notif.createdAt, 'MMM dd, HH:mm')}">Time</div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- User Info / Logout -->
+            <div class="dropdown" th:if="${currentUser != null}">
+                <button class="btn btn-outline-light btn-sm dropdown-toggle fw-medium" type="button" data-bs-toggle="dropdown">
+                    <i class="fa-solid fa-user-circle me-1"></i> <span th:text="${currentUser.username}">worker1</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                    <li><span class="dropdown-item-text text-muted small" th:text="${currentUser.fullName}">Full Name</span></li>
+                    <li><span class="dropdown-item-text text-muted small" th:text="${'Role: ' + currentUser.role}">Role: USER</span></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger" th:href="@{/logout}"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a></li>
+                </ul>
+            </div>
+
+            <!-- Log New Incident Button -->
+            <a th:href="@{/incidents/new}" class="btn btn-danger shadow-sm fw-bold">
+                <i class="fa-solid fa-plus me-1"></i>+ Log New Incident
             </a>
         </div>
     </div>
 </nav>
 
-<div class="container-fluid px-4">
+<div class="container-fluid px-lg-4 pb-5">
     
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="text-gray-800 mb-0 fw-bold">Dashboard Overview</h3>
+    <!-- Header Title Section (contains h2 Dashboard for E2E tests) -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="text-gray-800 mb-0 fw-bold">Dashboard Overview</h2>
+            <p class="text-muted small mb-0" th:if="${currentUser != null}">
+                Logged in as <strong th:text="${currentUser.fullName}">Worker</strong> 
+                (<span class="fw-semibold text-primary" th:text="${currentUser.role}">USER</span>) &bull; Department: <span th:text="${currentUser.department}">Operations</span>
+            </p>
+        </div>
+
+        <!-- User / Admin Quick View Tabs -->
+        <div class="btn-group shadow-sm" role="group">
+            <a th:href="@{/incidents}" class="btn btn-sm" th:classappend="${currentView != 'my' ? 'btn-primary' : 'btn-outline-primary'}">
+                <i class="fa-solid fa-list-ul me-1"></i> All Incidents
+            </a>
+            <a th:href="@{/incidents(view='my')}" class="btn btn-sm" th:classappend="${currentView == 'my' ? 'btn-primary' : 'btn-outline-primary'}">
+                <i class="fa-solid fa-user-check me-1"></i> My Reported Complaints
+            </a>
+        </div>
     </div>
 
-    <!-- Summary Cards -->
+    <!-- Summary Metrics Cards -->
     <div class="row mb-4">
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-4 col-md-6 mb-3">
             <div class="card metric-card bg-gradient-primary h-100 py-2" th:onclick="|window.location.href='@{/incidents(status='OPEN')}'|">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-uppercase mb-1">Open Incidents</div>
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Open Complaints</div>
                             <div class="h1 mb-0 font-weight-bold" th:text="${openCount}">0</div>
                         </div>
                         <div class="col-auto">
@@ -52,12 +141,12 @@
             </div>
         </div>
         
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-4 col-md-6 mb-3">
             <div class="card metric-card bg-gradient-success h-100 py-2" th:onclick="|window.location.href='@{/incidents(status='CLOSED')}'|">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-uppercase mb-1">Closed Incidents</div>
+                            <div class="text-xs font-weight-bold text-uppercase mb-1">Resolved & Work Done</div>
                             <div class="h1 mb-0 font-weight-bold" th:text="${closedCount}">0</div>
                         </div>
                         <div class="col-auto">
@@ -68,7 +157,7 @@
             </div>
         </div>
 
-        <div class="col-xl-4 col-md-6 mb-4">
+        <div class="col-xl-4 col-md-6 mb-3">
             <div class="card metric-card bg-gradient-danger h-100 py-2" th:onclick="|window.location.href='@{/incidents(severity='HIGH')}'|">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
@@ -86,11 +175,11 @@
     </div>
 
     <!-- Search/Filters Card -->
-    <div class="card mb-4">
-        <div class="card-header d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary"><i class="fa-solid fa-filter me-2"></i>Filter Incidents</h6>
+    <div class="card mb-4 border-0 shadow-sm">
+        <div class="card-header bg-white py-3 d-flex flex-row align-items-center justify-content-between">
+            <h6 class="m-0 font-weight-bold text-primary"><i class="fa-solid fa-filter me-2"></i>Filter Safety Complaints</h6>
         </div>
-        <div class="card-body">
+        <div class="card-body p-4">
             <form method="get" th:action="@{/incidents}" class="row g-3">
                 <div class="col-md-3">
                     <label for="status" class="form-label text-muted small fw-bold text-uppercase">Status</label>
@@ -113,11 +202,11 @@
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <label for="location" class="form-label text-muted small fw-bold text-uppercase">Location / Area</label>
+                    <label for="location" class="form-label text-muted small fw-bold text-uppercase">Location / Factory Bay</label>
                     <input type="text" id="location" name="location" class="form-control" placeholder="Search by location..." th:value="${selectedLocation}">
                 </div>
                 <div class="col-md-2 d-flex align-items-end gap-2">
-                    <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-magnifying-glass me-1"></i> Search</button>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold"><i class="fa-solid fa-magnifying-glass me-1"></i> Search</button>
                     <a th:href="@{/incidents}" class="btn btn-light w-100 border">Clear</a>
                 </div>
             </form>
@@ -125,34 +214,52 @@
     </div>
 
     <!-- Data Table -->
-    <div class="card shadow-sm table-container mb-5">
+    <div class="card shadow-sm border-0 table-container mb-5">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
                     <thead>
                         <tr>
                             <th class="ps-4">ID</th>
-                            <th>Title</th>
+                            <th>Photo</th>
+                            <th>Complaint Title</th>
                             <th>Location</th>
                             <th>Severity</th>
                             <th>Status</th>
                             <th>Reported By</th>
                             <th>Reported At</th>
+                            <th>Work Done</th>
                             <th class="pe-4 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:if="${#lists.isEmpty(incidents)}">
-                            <td colspan="8" class="text-center text-muted py-5">
-                                <i class="fa-regular fa-folder-open fa-3x mb-3 text-gray-300"></i>
-                                <h5>No incidents found</h5>
-                                <p>Adjust your filters or log a new incident.</p>
+                            <td colspan="10" class="text-center text-muted py-5">
+                                <i class="fa-regular fa-folder-open fa-3x mb-3 text-black-50"></i>
+                                <h5>No safety complaints found</h5>
+                                <p>Adjust your filters or submit a new incident report with camera evidence.</p>
                             </td>
                         </tr>
                         <tr th:each="incident : ${incidents}">
                             <td class="ps-4 fw-bold text-muted" th:text="${'#' + incident.id}">#1</td>
-                            <td th:text="${incident.title}" class="fw-semibold text-dark">Oil spill</td>
-                            <td th:text="${incident.location}">Assembly Line A</td>
+                            
+                            <!-- Thumbnail with photo preview -->
+                            <td>
+                                <div th:if="${incident.photoUrl != null}" class="position-relative d-inline-block">
+                                    <img th:src="@{${incident.photoUrl}}" alt="Evidence" class="rounded border shadow-sm" style="width: 44px; height: 44px; object-fit: cover; cursor: pointer;" onclick="openPhotoModal(this.src, 'Hazard Photo')">
+                                    <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-danger p-1" style="font-size: 0.55rem;" title="Photo attached">
+                                        <i class="fa-solid fa-camera"></i>
+                                    </span>
+                                </div>
+                                <div th:unless="${incident.photoUrl != null}" class="rounded bg-light border d-flex align-items-center justify-content-center text-muted" style="width: 44px; height: 44px;">
+                                    <i class="fa-regular fa-image text-black-50"></i>
+                                </div>
+                            </td>
+
+                            <td class="fw-semibold text-dark">
+                                <a th:href="@{/incidents/{id}(id=${incident.id})}" class="text-decoration-none text-dark hover-underline" th:text="${incident.title}">Oil spill</a>
+                            </td>
+                            <td th:text="${incident.location}">Bay 4</td>
                             <td>
                                 <span th:classappend="${incident.severity.name() == 'HIGH' ? 'bg-danger' : (incident.severity.name() == 'MEDIUM' ? 'bg-warning text-dark' : 'bg-info text-dark')}"
                                       class="badge" th:text="${incident.severity}">MEDIUM</span>
@@ -161,8 +268,22 @@
                                 <span th:classappend="${incident.status.name() == 'OPEN' ? 'bg-primary' : (incident.status.name() == 'IN_PROGRESS' ? 'bg-warning text-dark' : 'bg-success')}"
                                       class="badge" th:text="${incident.status}">OPEN</span>
                             </td>
-                            <td th:text="${incident.reportedBy}">Worker #102</td>
-                            <td th:text="${#temporals.format(incident.reportedAt, 'MMM dd, yyyy HH:mm')}">Aug 25, 2026 00:00</td>
+                            <td th:text="${incident.reportedBy}">Worker</td>
+                            <td th:text="${#temporals.format(incident.reportedAt, 'MMM dd, HH:mm')}">Aug 25, 14:00</td>
+                            
+                            <!-- Work Done Status -->
+                            <td>
+                                <span th:if="${incident.resolutionPhotoUrl != null}" class="badge bg-success-subtle text-success border border-success-subtle" title="Remediation photo available">
+                                    <i class="fa-solid fa-camera me-1"></i> Proof Added
+                                </span>
+                                <span th:if="${incident.resolutionPhotoUrl == null && incident.status.name() == 'CLOSED'}" class="badge bg-secondary-subtle text-secondary">
+                                    Resolved
+                                </span>
+                                <span th:if="${incident.status.name() != 'CLOSED'}" class="badge bg-light text-muted border">
+                                    Pending
+                                </span>
+                            </td>
+
                             <td class="pe-4 text-center">
                                 <a th:href="@{/incidents/{id}(id=${incident.id})}" class="btn btn-sm btn-light border text-primary fw-bold shadow-sm">
                                     <i class="fa-solid fa-arrow-right"></i> View
@@ -175,5 +296,30 @@
         </div>
     </div>
 </div>
+
+<!-- Quick Photo Inspection Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-2">
+                <img id="modalFullImage" src="" class="img-fluid rounded shadow-lg" style="max-height: 80vh;">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function openPhotoModal(src, title) {
+        document.getElementById('modalFullImage').src = src;
+        new bootstrap.Modal(document.getElementById('imageModal')).show();
+    }
+</script>
+
 </body>
 </html>

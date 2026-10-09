@@ -7,8 +7,9 @@ In Week 8, we convert the Freestyle Jenkins job to a **Pipeline job** that reads
 
 ## Step 1: Convert to Pipeline Job in Jenkins
 
-1. Open Jenkins at `http://localhost:8082/jenkins`.
-2. Click your existing job `factory-safety-incident-tracker` → **Configure** (or create a **New Item → Pipeline**).
+1. Open Jenkins in your browser at: **`http://localhost:9000`**
+2. Click **New Item** &rarr; Enter name `factory-safety-incident-tracker` &rarr; Select **Pipeline** &rarr; Click **OK**.
+   *(Or if you already have the job created, click on it and select **Configure**).*
 3. Scroll down to the **Pipeline** section.
 4. Change **Definition** to: `Pipeline script from SCM`.
 5. Set **SCM** to: `Git`

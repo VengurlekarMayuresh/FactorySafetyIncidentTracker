@@ -21,12 +21,20 @@ class IncidentServiceTest {
     @Mock
     private IncidentRepository incidentRepository;
 
+    @Mock
+    private FileStorageService fileStorageService;
+
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private IncidentServiceImpl incidentService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        incidentService.setFileStorageService(fileStorageService);
+        incidentService.setNotificationService(notificationService);
     }
 
     @Test
@@ -97,5 +105,36 @@ class IncidentServiceTest {
         assertEquals(5L, incidentService.countOpenIncidents());
         assertEquals(3L, incidentService.countClosedIncidents());
         assertEquals(2L, incidentService.countUnresolvedHighSeverity());
+    }
+
+    @Test
+    void testCreateIncidentWithPhoto() {
+        Incident incident = new Incident("Spill", "Acid spill", Severity.HIGH, "Hall A", "Worker 1");
+        when(fileStorageService.storeBase64Image("data:image/jpeg;base64,sample")).thenReturn("/uploads/test.jpg");
+        when(incidentRepository.save(any(Incident.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Incident result = incidentService.createIncidentWithPhoto(incident, null, "data:image/jpeg;base64,sample");
+
+        assertNotNull(result);
+        assertEquals("/uploads/test.jpg", result.getPhotoUrl());
+        verify(notificationService, times(1)).notifyAdmins(anyString(), anyString(), any(), eq("NEW_INCIDENT"));
+    }
+
+    @Test
+    void testResolveIncident() {
+        Incident incident = new Incident("Spill", "Acid spill", Severity.HIGH, "Hall A", "Worker 1");
+        incident.setId(10L);
+        when(incidentRepository.findById(10L)).thenReturn(Optional.of(incident));
+        when(fileStorageService.storeBase64Image("data:image/jpeg;base64,workdone")).thenReturn("/uploads/resolved.jpg");
+        when(incidentRepository.save(any(Incident.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Incident resolved = incidentService.resolveIncident(10L, Status.CLOSED, "Cleaned and verified safe", "Admin John", null, "data:image/jpeg;base64,workdone");
+
+        assertNotNull(resolved);
+        assertEquals(Status.CLOSED, resolved.getStatus());
+        assertEquals("Cleaned and verified safe", resolved.getResolutionNotes());
+        assertEquals("Admin John", resolved.getResolvedBy());
+        assertEquals("/uploads/resolved.jpg", resolved.getResolutionPhotoUrl());
+        verify(notificationService, times(1)).notifyUser(eq("Worker 1"), anyString(), anyString(), eq(10L), eq("STATUS_UPDATE"));
     }
 }

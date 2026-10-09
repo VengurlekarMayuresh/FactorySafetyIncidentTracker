@@ -1,0 +1,10 @@
+---
+# Handlers for safety_tracker role
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: yes
+
+- name: Restart safety-tracker service
+  systemd:
+    name: safety-tracker
+    state: restarted

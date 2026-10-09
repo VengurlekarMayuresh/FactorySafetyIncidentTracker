@@ -1,0 +1,10 @@
+---
+# ==============================================================================
+# Playbook: Complete Site Provisioning and Deployment
+# Usage: ansible-playbook -i inventory/hosts.ini playbooks/site.yml
+# ==============================================================================
+- name: Provision and Deploy Factory Safety Incident Tracker
+  hosts: safety_tracker
+  become: yes
+  roles:
+    - safety_tracker

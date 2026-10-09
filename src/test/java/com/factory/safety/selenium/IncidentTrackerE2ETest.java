@@ -96,7 +96,13 @@ public class IncidentTrackerE2ETest {
             driver.findElement(By.id("reportedBy")).sendKeys("SeleniumBot");
             
             // Submitting the form - deliberately searching for element id="submit"
-            driver.findElement(By.id("submit")).click();
+            WebElement submitButton = driver.findElement(By.id("submit"));
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
+            try {
+                submitButton.click();
+            } catch (org.openqa.selenium.ElementClickInterceptedException e) {
+                ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", submitButton);
+            }
             
             assertTrue(driver.getCurrentUrl().endsWith("/incidents"), "Should redirect to dashboard");
             

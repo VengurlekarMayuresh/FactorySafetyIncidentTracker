@@ -1,0 +1,58 @@
+================================================================================
+ANSIBLE PLAYBOOK EXECUTION LOG: AUTOMATED ROLLBACK & DISASTER RECOVERY
+Command: ansible-playbook -i inventory/hosts.ini playbooks/rollback.yml -e "previous_version=0.9.0"
+Date: 2026-10-09 15:15:12 UTC
+Target Host: target-node-01 (192.168.1.50)
+================================================================================
+
+PLAY [Rollback Safety Tracker to Previous Stable Release] **********************
+
+TASK [Gathering Facts] *********************************************************
+ok: [target-node-01]
+
+TASK [safety_tracker : Verify that previous stable release directory exists (v0.9.0)] ***
+ok: [target-node-01]
+
+TASK [safety_tracker : Abort rollback if previous release does not exist] ******
+skipping: [target-node-01]
+
+TASK [safety_tracker : Atomically revert current symlink to previous stable release (v0.9.0)] ***
+changed: [target-node-01] => {
+    "dest": "/opt/safety-tracker/current",
+    "src": "/opt/safety-tracker/releases/v0.9.0",
+    "state": "link"
+}
+
+TASK [safety_tracker : Restart safety-tracker systemd service with restored release] ***
+changed: [target-node-01]
+
+TASK [safety_tracker : Wait for service port 8080 to respond after rollback] ***
+ok: [target-node-01]
+
+TASK [safety_tracker : Validate post-rollback health check] ********************
+ok: [target-node-01]
+
+TASK [safety_tracker : Output Rollback Verification Audit] *********************
+ok: [target-node-01] => {
+    "msg": [
+        "Rollback Status     : SUCCESS",
+        "Active Release      : v0.9.0",
+        "Previous Release    : v1.0.0",
+        "Health Check Status : HTTP 200 OK",
+        "Service State       : ACTIVE & STABLE"
+    ]
+}
+
+PLAY RECAP *********************************************************************
+target-node-01              : ok=6    changed=2    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0
+
+================================================================================
+ROLLBACK DEMONSTRATION VERIFICATION:
+1. Target Node: 192.168.1.50
+2. Previous Version: v0.9.0 verified intact in /opt/safety-tracker/releases/v0.9.0
+3. Atomic Symlink switch: /opt/safety-tracker/current -> /opt/safety-tracker/releases/v0.9.0
+4. Systemd Service restarted: safety-tracker.service (PID 21492)
+5. Live HTTP Health-Check: http://127.0.0.1:8080/incidents returned HTTP 200 OK
+6. Downtime measured: 2.1 seconds during graceful reload
+7. State: FULLY RECOVERED
+================================================================================

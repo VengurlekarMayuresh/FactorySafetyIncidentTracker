@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Factory Safety Incident Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
+</head>
+<body class="auth-body">
+
+<div class="auth-container">
+    <div class="row g-0 auth-card shadow-lg" style="max-width: 600px;">
+        <div class="p-4 p-md-5 bg-white w-100">
+            <div class="text-center mb-4">
+                <div class="brand-icon-box bg-primary text-white mx-auto mb-3" style="width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-user-plus fa-lg"></i>
+                </div>
+                <h3 class="fw-bold text-dark">Create Safety Account</h3>
+                <p class="text-muted small">Register as a factory worker or safety administrator</p>
+            </div>
+
+            <div th:if="${errorMessage}" class="alert alert-danger py-2 px-3 small d-flex align-items-center mb-3">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i>
+                <span th:text="${errorMessage}">Error occurred</span>
+            </div>
+
+            <form th:action="@{/register}" method="post">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="fullName" name="fullName" placeholder="Full Name" required>
+                    <label for="fullName">Full Name</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="username" name="username" placeholder="Username" required>
+                    <label for="username">Username / Employee ID</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                    <label for="password">Password</label>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="USER" selected>Worker / Employee</option>
+                                <option value="ADMIN">Safety Officer / Admin</option>
+                            </select>
+                            <label for="role">Account Role</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="department" name="department" placeholder="Department" value="Plant Operations">
+                            <label for="department">Department / Bay</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3 fw-bold shadow-sm mb-3">
+                    <i class="fa-solid fa-check me-2"></i> Complete Registration
+                </button>
+            </form>
+
+            <div class="text-center mt-3 pt-3 border-top small">
+                <span class="text-muted">Already registered?</span>
+                <a th:href="@{/login}" class="fw-bold text-decoration-none text-primary ms-1">Sign In</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

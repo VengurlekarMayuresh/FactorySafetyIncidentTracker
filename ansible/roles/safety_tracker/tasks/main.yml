@@ -1,0 +1,10 @@
+---
+# Main task list for safety_tracker role
+- name: Step 1 - Provision Prerequisites (Packages, Users, Groups, Folders, Files, Ports)
+  include_tasks: prerequisites.yml
+
+- name: Step 2 - Deploy Application (Releases, Symlinks, Systemd Service)
+  include_tasks: deploy.yml
+
+- name: Step 3 - Health Check Verification
+  include_tasks: health_check.yml

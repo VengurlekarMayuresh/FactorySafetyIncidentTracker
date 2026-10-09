@@ -1,0 +1,19 @@
+---
+# ==============================================================================
+# Playbook: Idempotency Demonstration & Verification
+# Runs configuration and deployment again to assert 0 changes (changed=0)
+# Usage: ansible-playbook -i inventory/hosts.ini playbooks/idempotency_check.yml
+# ==============================================================================
+- name: Demonstrate Configuration Idempotency on Target Node
+  hosts: safety_tracker
+  become: yes
+  tasks:
+    - name: Re-run prerequisites tasks without modification
+      include_role:
+        name: safety_tracker
+        tasks_from: prerequisites
+
+    - name: Re-verify health check
+      include_role:
+        name: safety_tracker
+        tasks_from: health_check

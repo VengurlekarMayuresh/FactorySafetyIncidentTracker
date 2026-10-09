@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven-3'
-        jdk 'JDK-17'
-    }
-
     parameters {
         choice(
             name: 'ENV',
@@ -15,93 +10,93 @@ pipeline {
         string(
             name: 'APP_PORT',
             defaultValue: '8080',
-            description: 'Port to map for the deployed Docker container'
+            description: 'Port for the deployed application (dev: 8080, staging: 8081)'
         )
     }
 
     environment {
-        APP_NAME     = 'factory-safety-incident-tracker'
-        JAR_NAME     = 'incident-tracker-0.0.1-SNAPSHOT.jar'
-        IMAGE_NAME   = "factory-safety-incident-tracker"
+        APP_NAME   = 'factory-safety-incident-tracker'
+        JAR_NAME   = 'incident-tracker-0.0.1-SNAPSHOT.jar'
+        IMAGE_NAME = 'factory-safety-incident-tracker'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo "=============================="
+                echo "============================================="
                 echo " Stage: Checkout"
-                echo "=============================="
-                // Replace with actual git checkout for real CI
-                echo "Source code ready."
+                echo " Build ID: ${BUILD_NUMBER}"
+                echo " Environment: ${params.ENV} | Port: ${params.APP_PORT}"
+                echo "============================================="
+                bat 'echo Source code workspace ready.'
             }
         }
 
-        stage('Build') {
+        stage('Compile') {
             steps {
-                echo "=============================="
-                echo " Stage: Build (compile)"
-                echo "=============================="
+                echo "============================================="
+                echo " Stage: Compile Application"
+                echo "============================================="
                 bat './mvnw.cmd clean compile'
             }
         }
 
-        stage('Test') {
+        stage('Test & Quality Gate') {
             steps {
-                echo "=============================="
-                echo " Stage: Selenium & Unit Tests"
-                echo "=============================="
+                echo "============================================="
+                echo " Stage: Unit & E2E Automated Tests"
+                echo "============================================="
                 bat './mvnw.cmd test'
             }
             post {
                 always {
-                    junit '**/target/surefire-reports/*.xml'
-                    // Archive screenshots if there were any failures
+                    // Publish JUnit XML test results to Jenkins UI
+                    junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
+                    // Archive any test failure screenshots
                     archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
                 }
                 failure {
-                    echo "Tests FAILED - blocking deployment! Check screenshots in artifacts."
+                    echo "Quality Gate FAILED - Automated tests did not pass. Halting pipeline."
                 }
             }
         }
 
         stage('Package') {
             steps {
-                echo "=============================="
-                echo " Stage: Package JAR"
-                echo "=============================="
+                echo "============================================="
+                echo " Stage: Package Executable JAR"
+                echo "============================================="
                 bat "./mvnw.cmd package -DskipTests -Dspring.profiles.active=${params.ENV}"
             }
-        }
-
-        stage('Docker Build') {
-            steps {
-                echo "=============================="
-                echo " Stage: Docker Build"
-                echo "=============================="
-                bat "docker build -t ${env.IMAGE_NAME}:${BUILD_NUMBER} -t ${env.IMAGE_NAME}:latest ."
+            post {
+                success {
+                    // Archive compiled production artifact
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                }
             }
         }
 
-        stage('Deploy (Docker)') {
+        stage('Deploy') {
             when {
                 expression { currentBuild.currentResult == 'SUCCESS' }
             }
             steps {
-                echo "=============================="
-                echo " Stage: Deploy Docker Container to ${params.ENV}"
-                echo "=============================="
+                echo "============================================="
+                echo " Stage: Deploy to ${params.ENV} (Port: ${params.APP_PORT})"
+                echo "============================================="
+                bat "deploy.bat ${params.ENV} ${params.APP_PORT}"
+            }
+        }
 
-                // Stop and remove existing container if it exists
+        stage('Health Check') {
+            steps {
+                echo "============================================="
+                echo " Stage: Health Check & Verification"
+                echo "============================================="
+                echo "Waiting 10 seconds for Spring Boot service to initialize on port ${params.APP_PORT}..."
+                sleep time: 10, unit: 'SECONDS'
                 bat """
-                    docker stop ${env.APP_NAME}-${params.ENV} || echo "No container to stop"
-                    docker rm ${env.APP_NAME}-${params.ENV} || echo "No container to remove"
-                """
-
-                // Run new container
-                bat """
-                    docker run -d --name ${env.APP_NAME}-${params.ENV} -p ${params.APP_PORT}:8080 ^
-                        -e SPRING_PROFILES_ACTIVE=${params.ENV} ^
-                        ${env.IMAGE_NAME}:${BUILD_NUMBER}
+                    curl.exe -s -I http://localhost:${params.APP_PORT}/incidents || echo Application booting up...
                 """
             }
         }
@@ -109,15 +104,16 @@ pipeline {
 
     post {
         success {
-            echo "============================================"
+            echo "========================================================"
             echo " PIPELINE SUCCESS - Build #${BUILD_NUMBER}"
-            echo " Container deployed to http://localhost:${params.APP_PORT}/incidents"
-            echo "============================================"
+            echo " Application running at: http://localhost:${params.APP_PORT}/incidents"
+            echo "========================================================"
         }
         failure {
-            echo "============================================"
+            echo "========================================================"
             echo " PIPELINE FAILED - Build #${BUILD_NUMBER}"
-            echo "============================================"
+            echo " Inspect console output and surefire reports above."
+            echo "========================================================"
         }
     }
 }

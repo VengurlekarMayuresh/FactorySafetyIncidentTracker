@@ -1,0 +1,72 @@
+---
+# ==============================================================================
+# Tasks: Server Prerequisites Setup
+# Idempotent provisioning of packages, user, group, folders, files, and firewall
+# ==============================================================================
+
+- name: Update apt package cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+  when: ansible_os_family == "Debian"
+
+- name: Install required server packages (Java 17, curl, system utilities)
+  package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ required_packages }}"
+
+- name: Create dedicated system group for safety tracker
+  group:
+    name: "{{ app_group }}"
+    state: present
+    system: yes
+
+- name: Create non-root dedicated system user
+  user:
+    name: "{{ app_user }}"
+    group: "{{ app_group }}"
+    system: yes
+    shell: "{{ app_user_shell }}"
+    home: "{{ app_user_home }}"
+    create_home: yes
+    state: present
+
+- name: Create application and data directory hierarchy
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+  loop:
+    - "{{ app_base_dir }}"
+    - "{{ app_releases_dir }}"
+    - "{{ app_log_dir }}"
+    - "{{ app_uploads_dir }}"
+    - "{{ app_config_dir }}"
+
+- name: Configure firewall to allow application port {{ app_port }}
+  ufw:
+    rule: allow
+    port: "{{ app_port | string }}"
+    proto: tcp
+  when: ansible_os_family == "Debian"
+  ignore_errors: yes
+
+- name: Deploy environment configuration file
+  template:
+    src: incident-tracker.env.j2
+    dest: "{{ app_config_dir }}/incident-tracker.env"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0640'
+
+- name: Deploy systemd service unit definition
+  template:
+    src: safety-tracker.service.j2
+    dest: "/etc/systemd/system/safety-tracker.service"
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Reload systemd daemon

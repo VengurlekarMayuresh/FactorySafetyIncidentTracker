@@ -1,0 +1,31 @@
+---
+# ==============================================================================
+# Tasks: Automated Health Check Verification
+# ==============================================================================
+
+- name: Perform HTTP health check against application endpoint
+  uri:
+    url: "{{ health_check_url }}"
+    method: GET
+    status_code: 200
+    return_content: yes
+  register: health_check_result
+  until: health_check_result.status == 200
+  retries: "{{ health_check_retries }}"
+  delay: "{{ health_check_delay }}"
+
+- name: Validate that Safety Tracker application payload is active
+  assert:
+    that:
+      - "health_check_result.status == 200"
+      - "'Factory Safety Tracker' in health_check_result.content or 'Dashboard Overview' in health_check_result.content"
+    fail_msg: "Health check FAILED! Application endpoint returned status {{ health_check_result.status }} without expected HTML body."
+    success_msg: "Health check PASSED! Application is alive and responding on port {{ app_port }} with HTTP 200 OK."
+
+- name: Display health check audit confirmation
+  debug:
+    msg:
+      - "Endpoint Status   : HTTP {{ health_check_result.status }} OK"
+      - "Response Time     : {{ health_check_result.elapsed }} seconds"
+      - "Application URL   : {{ health_check_url }}"
+      - "Cluster Health    : HEALTHY"

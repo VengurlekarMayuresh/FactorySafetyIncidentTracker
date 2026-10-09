@@ -1,0 +1,14 @@
+---
+# ==============================================================================
+# Playbook: Server Prerequisites Configuration Only
+# Packages, Users, Groups, Folders, Files, Ports and Services
+# Usage: ansible-playbook -i inventory/hosts.ini playbooks/configure.yml
+# ==============================================================================
+- name: Configure Target Node Prerequisites for Safety Tracker
+  hosts: safety_tracker
+  become: yes
+  tasks:
+    - name: Run prerequisites configuration tasks
+      include_role:
+        name: safety_tracker
+        tasks_from: prerequisites

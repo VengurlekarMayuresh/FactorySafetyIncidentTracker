@@ -1,0 +1,55 @@
+---
+# ==============================================================================
+# Tasks: Application Deployment & Zero-Downtime Symlink Switch
+# ==============================================================================
+
+- name: Create release directory for version {{ app_version }}
+  file:
+    path: "{{ app_releases_dir }}/v{{ app_version }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+
+- name: Deploy application executable JAR to release directory
+  copy:
+    src: "{{ local_jar_source }}"
+    dest: "{{ app_releases_dir }}/v{{ app_version }}/{{ remote_jar_name }}"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: '0755'
+  notify: Restart safety-tracker service
+
+- name: Symlink persistent uploads directory to release
+  file:
+    src: "{{ app_uploads_dir }}"
+    dest: "{{ app_releases_dir }}/v{{ app_version }}/uploads"
+    state: link
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+
+- name: Atomically update current release symlink to v{{ app_version }}
+  file:
+    src: "{{ app_releases_dir }}/v{{ app_version }}"
+    dest: "{{ app_current_dir }}"
+    state: link
+    force: yes
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  notify: Restart safety-tracker service
+
+- name: Flush handlers to trigger service restart if changes occurred
+  meta: flush_handlers
+
+- name: Ensure safety-tracker service is running and enabled on boot
+  systemd:
+    name: safety-tracker
+    state: started
+    enabled: yes
+
+- name: Wait for application port {{ app_port }} to start listening
+  wait_for:
+    port: "{{ app_port }}"
+    delay: 3
+    timeout: 60
+    state: started

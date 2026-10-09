@@ -1,0 +1,13 @@
+---
+# ==============================================================================
+# Playbook: Application Deployment
+# Usage: ansible-playbook -i inventory/hosts.ini playbooks/deploy.yml
+# ==============================================================================
+- name: Deploy Factory Safety Incident Tracker Application
+  hosts: safety_tracker
+  become: yes
+  tasks:
+    - name: Run application deployment tasks
+      include_role:
+        name: safety_tracker
+        tasks_from: deploy

@@ -1,0 +1,13 @@
+---
+# ==============================================================================
+# Playbook: Automated Rollback to Previous Stable Release
+# Usage: ansible-playbook -i inventory/hosts.ini playbooks/rollback.yml -e "previous_version=0.9.0"
+# ==============================================================================
+- name: Rollback Safety Tracker to Previous Stable Release
+  hosts: safety_tracker
+  become: yes
+  tasks:
+    - name: Run rollback tasks
+      include_role:
+        name: safety_tracker
+        tasks_from: rollback
