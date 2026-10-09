@@ -15,71 +15,76 @@
 </head>
 <body>
 
-<!-- Navbar -->
+<!-- Mobile Responsive Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top mb-4">
     <div class="container-fluid px-lg-4">
         <a class="navbar-brand d-flex align-items-center" th:href="@{/incidents}">
             <div class="brand-icon-nav me-2">
                 <i class="fa-solid fa-shield-halved"></i>
             </div>
-            <span>Factory Safety Tracker</span>
+            <span>SafeGuard Pro</span>
         </a>
 
-        <div class="d-flex align-items-center gap-3 ms-auto">
-            <!-- Role indicator -->
-            <div th:if="${currentUser != null}">
-                <span th:if="${currentUser.isAdmin()}" class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fw-semibold">
-                    <i class="fa-solid fa-user-shield me-1"></i> Admin Side
-                </span>
-                <span th:unless="${currentUser.isAdmin()}" class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fw-semibold">
-                    <i class="fa-solid fa-user-hard-hat me-1"></i> Worker Side
-                </span>
-            </div>
-
-            <!-- Role Switcher -->
-            <a th:if="${currentUser != null && currentUser.isAdmin()}" th:href="@{/demo-login(role='USER')}" class="btn btn-outline-light btn-sm" title="Switch to Worker View">
-                <i class="fa-solid fa-arrows-rotate me-1"></i> Switch to Worker
+        <!-- Mobile Controls (Alerts & Back) -->
+        <div class="d-flex align-items-center gap-2 d-lg-none ms-auto me-2">
+            <a th:href="@{/incidents}" class="btn btn-outline-light btn-sm">
+                <i class="fa-solid fa-arrow-left"></i>
             </a>
-            <a th:if="${currentUser != null && !currentUser.isAdmin()}" th:href="@{/demo-login(role='ADMIN')}" class="btn btn-outline-warning btn-sm" title="Switch to Admin View">
-                <i class="fa-solid fa-user-shield me-1"></i> Switch to Admin
-            </a>
+            <button class="navbar-toggler p-2 border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#navbarDetail" aria-controls="navbarDetail" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+        </div>
 
-            <!-- Notification Bell Dropdown -->
-            <div class="dropdown">
-                <button class="btn btn-dark position-relative notification-btn border border-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fa-regular fa-bell"></i>
-                    <span th:if="${unreadNotificationsCount > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" th:text="${unreadNotificationsCount}">
-                        1
+        <div class="collapse navbar-collapse" id="navbarDetail">
+            <div class="d-flex flex-column flex-lg-row align-items-lg-center gap-2 gap-lg-3 ms-auto w-100 justify-content-end">
+                
+                <!-- Role indicator (No Switcher) -->
+                <div th:if="${currentUser != null}" class="my-2 my-lg-0">
+                    <span th:if="${currentUser.isAdmin()}" class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 fw-semibold d-inline-block">
+                        <i class="fa-solid fa-user-shield me-1"></i> Admin Side
                     </span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow notification-dropdown p-2" style="width: 320px;">
-                    <li class="d-flex justify-content-between align-items-center px-2 py-1 border-bottom mb-2">
-                        <span class="fw-bold small text-dark">Notifications</span>
-                        <form th:action="@{/notifications/read-all}" method="post" class="m-0">
-                            <button type="submit" class="btn btn-link btn-sm text-decoration-none p-0 text-muted" style="font-size: 0.75rem;">Mark all read</button>
-                        </form>
-                    </li>
-                    <li th:if="${#lists.isEmpty(recentNotifications)}" class="text-center py-3 text-muted small">
-                        <i class="fa-regular fa-bell-slash fa-2x mb-2 text-black-50"></i>
-                        <div>No new notifications</div>
-                    </li>
-                    <li th:each="notif : ${recentNotifications}" class="notification-item p-2 rounded mb-1" th:classappend="${!notif.isRead() ? 'bg-light font-weight-bold' : ''}">
-                        <div class="d-flex align-items-start">
-                            <i class="fa-solid fa-circle-exclamation text-primary mt-1 me-2"></i>
-                            <div class="flex-grow-1">
-                                <div class="small fw-semibold text-dark" th:text="${notif.title}">Title</div>
-                                <div class="text-muted" style="font-size: 0.78rem;" th:text="${notif.message}">Message</div>
-                                <div class="text-black-50" style="font-size: 0.7rem;" th:text="${#temporals.format(notif.createdAt, 'MMM dd, HH:mm')}">Time</div>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+                    <span th:unless="${currentUser.isAdmin()}" class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 fw-semibold d-inline-block">
+                        <i class="fa-solid fa-user-hard-hat me-1"></i> Worker Side
+                    </span>
+                </div>
 
-            <!-- Dashboard Button -->
-            <a th:href="@{/incidents}" class="btn btn-outline-light btn-sm fw-medium">
-                <i class="fa-solid fa-house me-1"></i> Dashboard
-            </a>
+                <!-- Notification Bell Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-dark position-relative notification-btn border border-secondary" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="notificationDropdownBtn">
+                        <i class="fa-regular fa-bell"></i>
+                        <span th:if="${unreadNotificationsCount > 0}" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" th:text="${unreadNotificationsCount}">
+                            1
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow notification-dropdown p-2" style="width: 320px;">
+                        <li class="d-flex justify-content-between align-items-center px-2 py-1 border-bottom mb-2">
+                            <span class="fw-bold small text-dark"><i class="fa-solid fa-bell me-1 text-primary"></i> Notifications</span>
+                            <form th:action="@{/notifications/read-all}" method="post" class="m-0">
+                                <button type="submit" class="btn btn-link btn-sm text-decoration-none p-0 text-muted" style="font-size: 0.75rem;">Mark all read</button>
+                            </form>
+                        </li>
+                        <li th:if="${#lists.isEmpty(recentNotifications)}" class="text-center py-3 text-muted small">
+                            <i class="fa-regular fa-bell-slash fa-2x mb-2 text-black-50"></i>
+                            <div>No new notifications</div>
+                        </li>
+                        <li th:each="notif : ${recentNotifications}" class="notification-item p-2 rounded mb-1" th:classappend="${!notif.isRead() ? 'bg-light font-weight-bold' : ''}">
+                            <div class="d-flex align-items-start">
+                                <i class="fa-solid fa-circle-exclamation text-primary mt-1 me-2"></i>
+                                <div class="flex-grow-1">
+                                    <div class="small fw-semibold text-dark" th:text="${notif.title}">Title</div>
+                                    <div class="text-muted" style="font-size: 0.78rem;" th:text="${notif.message}">Message</div>
+                                    <div class="text-black-50" style="font-size: 0.7rem;" th:text="${#temporals.format(notif.createdAt, 'MMM dd, HH:mm')}">Time</div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Dashboard Link -->
+                <a th:href="@{/incidents}" class="btn btn-outline-light btn-sm fw-medium">
+                    <i class="fa-solid fa-house me-1"></i> Dashboard
+                </a>
+            </div>
         </div>
     </div>
 </nav>
@@ -88,22 +93,22 @@
     
     <!-- Top Action Row -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <div class="d-flex align-items-center">
-            <a th:href="@{/incidents}" class="btn btn-light border me-3 shadow-sm">
-                <i class="fa-solid fa-arrow-left me-1"></i> Back
+        <div class="d-flex align-items-center flex-wrap gap-2">
+            <a th:href="@{/incidents}" class="btn btn-light border me-2 shadow-sm">
+                <i class="fa-solid fa-arrow-left me-1"></i> Back to Dashboard
             </a>
             <div>
                 <h3 class="fw-bold text-gray-800 mb-0 d-flex align-items-center flex-wrap gap-2">
                     Complaint <span class="text-primary" th:text="${'#' + incident.id}">#1</span>
-                    <span th:classappend="${incident.status.name() == 'OPEN' ? 'bg-primary' : (incident.status.name() == 'IN_PROGRESS' ? 'bg-warning text-dark' : 'bg-success')}"
-                          class="badge fs-6 px-3 py-1 ms-2" th:text="${incident.status}">OPEN</span>
+                    <span th:classappend="${incident.status.name() == 'OPEN' ? 'bg-primary text-white' : (incident.status.name() == 'IN_PROGRESS' ? 'bg-warning text-dark' : 'bg-success text-white')}"
+                          class="badge fs-6 px-3 py-1 ms-1" th:text="${incident.status}">OPEN</span>
                 </h3>
             </div>
         </div>
         
-        <!-- Admin Delete Button -->
-        <div th:if="${currentUser != null && currentUser.isAdmin()}">
-            <form th:action="@{/incidents/{id}/delete(id=${incident.id})}" method="post" onsubmit="return confirm('Are you sure you want to permanently delete this safety incident record?');">
+        <!-- Delete Button (Available for Admin OR Reporter) -->
+        <div th:if="${currentUser != null && (currentUser.isAdmin() || incident.reportedBy == currentUser.username)}">
+            <form th:action="@{/incidents/{id}/delete(id=${incident.id})}" method="post" onsubmit="return confirm('Are you sure you want to permanently delete this safety incident record?');" class="m-0">
                 <button type="submit" class="btn btn-outline-danger btn-sm fw-semibold shadow-sm">
                     <i class="fa-solid fa-trash me-1"></i> Delete Record
                 </button>
@@ -119,17 +124,17 @@
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-circle-info text-primary me-2"></i> Hazard Report Information</h5>
-                    <span th:classappend="${incident.severity.name() == 'HIGH' ? 'bg-danger' : (incident.severity.name() == 'MEDIUM' ? 'bg-warning text-dark' : 'bg-info text-dark')}"
+                    <span th:classappend="${incident.severity.name() == 'HIGH' ? 'bg-danger text-white' : (incident.severity.name() == 'MEDIUM' ? 'bg-warning text-dark' : 'bg-info text-dark')}"
                           class="badge fs-6 px-3 py-1" th:text="${'Severity: ' + incident.severity}">HIGH</span>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body p-3 p-md-4">
                     <h4 class="fw-bold mb-3 text-dark" th:text="${incident.title}">Oil spill on floor</h4>
                     
                     <h6 class="text-muted fw-bold text-uppercase small mb-2">Description</h6>
                     <p class="mb-4 text-dark p-3 bg-light rounded-3 leading-relaxed" th:text="${incident.description}">Detailed incident description.</p>
                     
                     <div class="row g-3">
-                        <div class="col-sm-4">
+                        <div class="col-12 col-sm-4">
                             <div class="p-3 bg-light rounded-3 h-100">
                                 <h6 class="text-muted fw-bold text-uppercase small mb-1">Location</h6>
                                 <div class="d-flex align-items-center text-dark fw-semibold">
@@ -138,7 +143,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-sm-4">
+                        <div class="col-12 col-sm-4">
                             <div class="p-3 bg-light rounded-3 h-100">
                                 <h6 class="text-muted fw-bold text-uppercase small mb-1">Reported By</h6>
                                 <div class="d-flex align-items-center text-dark fw-semibold">
@@ -147,7 +152,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-sm-4">
+                        <div class="col-12 col-sm-4">
                             <div class="p-3 bg-light rounded-3 h-100">
                                 <h6 class="text-muted fw-bold text-uppercase small mb-1">Reported At</h6>
                                 <div class="d-flex align-items-center text-dark fw-semibold small">
@@ -167,11 +172,11 @@
                         <i class="fa-solid fa-images text-primary me-2"></i> Photographic Evidence & Remediation
                     </h5>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body p-3 p-md-4">
                     <div class="row g-4">
                         
                         <!-- Initial Complaint Photo (Reported by User) -->
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                             <div class="photo-card border rounded-3 p-3 h-100 d-flex flex-column bg-light">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1">
@@ -180,7 +185,7 @@
                                     <small class="text-muted">Reported Proof</small>
                                 </div>
 
-                                <div class="flex-grow-1 d-flex align-items-center justify-content-center my-2 overflow-hidden rounded bg-dark" style="min-height: 220px; max-height: 260px;">
+                                <div class="flex-grow-1 d-flex align-items-center justify-content-center my-2 overflow-hidden rounded bg-dark" style="min-height: 200px; max-height: 260px;">
                                     <img th:if="${incident.photoUrl != null}" th:src="@{${incident.photoUrl}}" alt="Reported Hazard Photo" class="img-fluid clickable-photo" style="max-height: 260px; object-fit: contain; cursor: pointer;" onclick="openPhotoModal(this.src, 'Initial Hazard Photograph')">
                                     <div th:unless="${incident.photoUrl != null}" class="text-center text-white-50 p-4">
                                         <i class="fa-regular fa-image fa-3x mb-2 opacity-50"></i>
@@ -189,13 +194,13 @@
                                 </div>
 
                                 <div class="mt-2 text-muted small">
-                                    <i class="fa-solid fa-circle-info me-1 text-primary"></i> Provided by worker during initial complaint submission.
+                                    <i class="fa-solid fa-circle-info me-1 text-primary"></i> Provided during initial complaint submission.
                                 </div>
                             </div>
                         </div>
 
                         <!-- Resolution / Work Done Photo (Added by Admin) -->
-                        <div class="col-md-6">
+                        <div class="col-12 col-md-6">
                             <div class="photo-card border rounded-3 p-3 h-100 d-flex flex-column" th:classappend="${incident.status.name() == 'CLOSED' ? 'bg-success-subtle border-success' : 'bg-light'}">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="badge" th:classappend="${incident.resolutionPhotoUrl != null ? 'bg-success text-white' : 'bg-secondary-subtle text-secondary'}">
@@ -204,7 +209,7 @@
                                     <small class="text-muted">Resolution Proof</small>
                                 </div>
 
-                                <div class="flex-grow-1 d-flex align-items-center justify-content-center my-2 overflow-hidden rounded bg-dark" style="min-height: 220px; max-height: 260px;">
+                                <div class="flex-grow-1 d-flex align-items-center justify-content-center my-2 overflow-hidden rounded bg-dark" style="min-height: 200px; max-height: 260px;">
                                     <img th:if="${incident.resolutionPhotoUrl != null}" th:src="@{${incident.resolutionPhotoUrl}}" alt="Resolution Work Done Photo" class="img-fluid clickable-photo" style="max-height: 260px; object-fit: contain; cursor: pointer;" onclick="openPhotoModal(this.src, 'Remediation Work Done Photograph')">
                                     <div th:unless="${incident.resolutionPhotoUrl != null}" class="text-center text-white-50 p-4">
                                         <i class="fa-solid fa-wrench fa-3x mb-2 opacity-50"></i>
@@ -229,16 +234,16 @@
 
         </div>
 
-        <!-- Right Side: Status Management & Admin Resolution Column -->
+        <!-- Right Side: Status Management & Remediation Column -->
         <div class="col-lg-5 mb-4">
             
-            <!-- ADMIN MANAGEMENT & RESOLUTION FORM -->
+            <!-- ADMIN ONLY: RESOLUTION FORM -->
             <div th:if="${currentUser != null && currentUser.isAdmin()}" class="card shadow-sm border-0 mb-4 admin-resolution-card">
                 <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold"><i class="fa-solid fa-user-shield text-danger me-2"></i> Admin Resolution Console</h5>
                     <span class="badge bg-danger">Admin Authorized</span>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body p-3 p-md-4">
                     <p class="text-muted small mb-3">
                         As safety administrator, you can update status, document corrective actions taken, and attach photographic proof of completed work.
                     </p>
@@ -302,12 +307,12 @@
                 </div>
             </div>
 
-            <!-- WORKER STATUS TRACKING (When viewed by Worker / User) -->
+            <!-- WORKER VIEW: REMEDIATION PROGRESS TIMELINE -->
             <div th:unless="${currentUser != null && currentUser.isAdmin()}" class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-white py-3">
                     <h5 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-bars-progress text-primary me-2"></i> Remediation Progress</h5>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body p-3 p-md-4">
                     <div class="timeline-stepper mb-4">
                         <div class="step-item" th:classappend="${incident.status.name() == 'OPEN' || incident.status.name() == 'IN_PROGRESS' || incident.status.name() == 'CLOSED' ? 'completed' : ''}">
                             <div class="step-icon"><i class="fa-solid fa-flag"></i></div>
@@ -333,23 +338,36 @@
                         </div>
                     </div>
 
-                    <div class="alert alert-light border small text-muted mb-0">
-                        <i class="fa-solid fa-circle-info text-info me-1"></i>
-                        Status updates and completion photos are managed by the Factory Safety Officer. You will receive an in-app notification when work is finished.
-                    </div>
-                </div>
-            </div>
+                    <!-- USER REQUEST MANAGEMENT: User can close or delete their own request -->
+                    <div th:if="${currentUser != null && incident.reportedBy == currentUser.username}" class="border-top pt-3 mt-3">
+                        <h6 class="fw-bold text-dark mb-2"><i class="fa-solid fa-user-gear text-primary me-1"></i> Manage Your Request</h6>
+                        <p class="text-muted small mb-3">As the reporter of this hazard, you can close this complaint if the danger is resolved or delete it.</p>
+                        
+                        <div class="d-flex flex-column gap-2">
+                            <!-- Close Request Button -->
+                            <form th:if="${incident.status.name() != 'CLOSED'}" th:action="@{/incidents/{id}/close(id=${incident.id})}" method="post" onsubmit="return confirm('Do you want to mark your request as CLOSED?');">
+                                <button type="submit" class="btn btn-success w-100 fw-bold py-2 shadow-sm">
+                                    <i class="fa-solid fa-check-double me-2"></i> Close My Request (Hazard Eliminated)
+                                </button>
+                            </form>
+                            
+                            <div th:if="${incident.status.name() == 'CLOSED'}" class="alert alert-success py-2 px-3 small d-flex align-items-center mb-0">
+                                <i class="fa-solid fa-circle-check me-2"></i> This request has been successfully closed.
+                            </div>
 
-            <!-- Quick Switcher Helper Card -->
-            <div class="card bg-light border-0 p-3 rounded-3 text-center">
-                <small class="text-muted mb-2 d-block">Pair-Programming Role Switcher</small>
-                <div class="d-flex justify-content-center gap-2">
-                    <a th:href="@{/demo-login(role='USER')}" class="btn btn-outline-primary btn-sm">
-                        <i class="fa-solid fa-user-hard-hat me-1"></i> View as Worker
-                    </a>
-                    <a th:href="@{/demo-login(role='ADMIN')}" class="btn btn-outline-danger btn-sm">
-                        <i class="fa-solid fa-user-shield me-1"></i> View as Admin
-                    </a>
+                            <!-- Delete Request Button -->
+                            <form th:action="@{/incidents/{id}/delete(id=${incident.id})}" method="post" onsubmit="return confirm('Are you sure you want to permanently delete your reported request?');">
+                                <button type="submit" class="btn btn-outline-danger w-100 fw-bold py-2">
+                                    <i class="fa-solid fa-trash me-2"></i> Delete This Request
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div th:unless="${currentUser != null && incident.reportedBy == currentUser.username}" class="alert alert-light border small text-muted mb-0">
+                        <i class="fa-solid fa-circle-info text-info me-1"></i>
+                        Status updates and completion photos are managed by the Factory Safety Officer.
+                    </div>
                 </div>
             </div>
 
@@ -382,37 +400,37 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" onclick="stopAdminCameraStream()"></button>
             </div>
-            <div class="modal-body p-4 text-center bg-black">
-                <div id="adminVideoContainer" class="position-relative d-inline-block w-100" style="max-height: 460px; overflow: hidden; border-radius: 8px;">
-                    <video id="adminCameraVideo" autoplay playsinline class="w-100" style="max-height: 460px; object-fit: cover;"></video>
+            <div class="modal-body p-3 p-md-4 text-center bg-black">
+                <div id="adminVideoContainer" class="position-relative d-inline-block w-100 camera-viewport" style="max-height: 420px; overflow: hidden; border-radius: 8px;">
+                    <video id="adminCameraVideo" autoplay playsinline class="w-100" style="max-height: 420px; object-fit: cover;"></video>
                     <div id="adminShutterFlash" class="shutter-flash"></div>
                 </div>
 
                 <canvas id="adminCameraCanvas" style="display: none;"></canvas>
 
                 <div id="adminCapturedPreviewContainer" class="d-none mt-2">
-                    <img id="adminModalCapturedImg" src="" class="img-fluid rounded border border-light" style="max-height: 400px;">
+                    <img id="adminModalCapturedImg" src="" class="img-fluid rounded border border-light" style="max-height: 380px;">
                 </div>
 
                 <div id="adminCameraStatusMsg" class="text-white-50 small mt-2">
                     <i class="fa-solid fa-shield-halved me-1 text-warning"></i> Accessing camera for work done proof...
                 </div>
             </div>
-            <div class="modal-footer bg-dark border-0 justify-content-between">
+            <div class="modal-footer bg-dark border-0 justify-content-between flex-wrap gap-2">
                 <div>
                     <button type="button" class="btn btn-outline-light btn-sm" onclick="switchAdminCamera()">
                         <i class="fa-solid fa-camera-rotate me-1"></i> Flip Camera
                     </button>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 flex-wrap">
                     <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal" onclick="stopAdminCameraStream()">Cancel</button>
-                    <button type="button" id="adminSnapBtn" class="btn btn-success fw-bold" onclick="snapAdminPhoto()">
+                    <button type="button" id="adminSnapBtn" class="btn btn-success fw-bold btn-sm" onclick="snapAdminPhoto()">
                         <i class="fa-solid fa-camera me-2"></i> Take Snapshot
                     </button>
-                    <button type="button" id="adminRetakeBtn" class="btn btn-outline-warning fw-bold d-none" onclick="retakeAdminPhoto()">
+                    <button type="button" id="adminRetakeBtn" class="btn btn-outline-warning fw-bold d-none btn-sm" onclick="retakeAdminPhoto()">
                         <i class="fa-solid fa-rotate-left me-1"></i> Retake
                     </button>
-                    <button type="button" id="adminUsePhotoBtn" class="btn btn-primary fw-bold d-none" onclick="confirmAdminCameraPhoto()">
+                    <button type="button" id="adminUsePhotoBtn" class="btn btn-primary fw-bold d-none btn-sm" onclick="confirmAdminCameraPhoto()">
                         <i class="fa-solid fa-check me-2"></i> Attach Photo
                     </button>
                 </div>
@@ -425,109 +443,10 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    // Photo Enlarge Viewer
     function openPhotoModal(src, title) {
         document.getElementById('modalFullImage').src = src;
         document.getElementById('imageModalTitle').innerText = title;
         new bootstrap.Modal(document.getElementById('imageModal')).show();
-    }
-
-    // Admin Work Done Photo & Camera Logic
-    let adminStream = null;
-    let adminFacingMode = 'environment';
-
-    function openAdminCameraModal() {
-        const modal = new bootstrap.Modal(document.getElementById('adminCameraModal'));
-        modal.show();
-        startAdminCameraStream();
-    }
-
-    async function startAdminCameraStream() {
-        const video = document.getElementById('adminCameraVideo');
-        const statusMsg = document.getElementById('adminCameraStatusMsg');
-        
-        document.getElementById('adminVideoContainer').classList.remove('d-none');
-        document.getElementById('adminCapturedPreviewContainer').classList.add('d-none');
-        document.getElementById('adminSnapBtn').classList.remove('d-none');
-        document.getElementById('adminRetakeBtn').classList.add('d-none');
-        document.getElementById('adminUsePhotoBtn').classList.add('d-none');
-
-        stopAdminCameraStream();
-
-        try {
-            statusMsg.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1 text-info"></i> Activating camera...';
-            adminStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: adminFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
-                audio: false
-            });
-            video.srcObject = adminStream;
-            video.play();
-            statusMsg.innerHTML = '<span class="text-success"><i class="fa-solid fa-check-circle me-1"></i> Live camera active. Snap work done proof.</span>';
-        } catch (err) {
-            console.error('Camera error:', err);
-            statusMsg.innerHTML = '<span class="text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> Camera permission needed or not available. Please allow access.</span>';
-        }
-    }
-
-    function switchAdminCamera() {
-        adminFacingMode = adminFacingMode === 'user' ? 'environment' : 'user';
-        startAdminCameraStream();
-    }
-
-    function stopAdminCameraStream() {
-        if (adminStream) {
-            adminStream.getTracks().forEach(t => t.stop());
-            adminStream = null;
-        }
-    }
-
-    function snapAdminPhoto() {
-        const video = document.getElementById('adminCameraVideo');
-        const canvas = document.getElementById('adminCameraCanvas');
-        const previewImg = document.getElementById('adminModalCapturedImg');
-        const shutter = document.getElementById('adminShutterFlash');
-
-        shutter.classList.add('flash-active');
-        setTimeout(() => shutter.classList.remove('flash-active'), 200);
-
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        previewImg.src = dataUrl;
-
-        document.getElementById('adminVideoContainer').classList.add('d-none');
-        document.getElementById('adminCapturedPreviewContainer').classList.remove('d-none');
-        document.getElementById('adminSnapBtn').classList.add('d-none');
-        document.getElementById('adminRetakeBtn').classList.remove('d-none');
-        document.getElementById('adminUsePhotoBtn').classList.remove('d-none');
-        document.getElementById('adminCameraStatusMsg').innerHTML = '<span class="text-info">Photo captured! Click "Attach Photo".</span>';
-    }
-
-    function retakeAdminPhoto() {
-        document.getElementById('adminVideoContainer').classList.remove('d-none');
-        document.getElementById('adminCapturedPreviewContainer').classList.add('d-none');
-        document.getElementById('adminSnapBtn').classList.remove('d-none');
-        document.getElementById('adminRetakeBtn').classList.add('d-none');
-        document.getElementById('adminUsePhotoBtn').classList.add('d-none');
-    }
-
-    function confirmAdminCameraPhoto() {
-        const dataUrl = document.getElementById('adminModalCapturedImg').src;
-        document.getElementById('cameraResolutionBase64').value = dataUrl;
-
-        const previewContainer = document.getElementById('adminPhotoPreviewContainer');
-        const previewImg = document.getElementById('adminPhotoPreviewImg');
-        previewImg.src = dataUrl;
-        previewContainer.classList.remove('d-none');
-
-        document.getElementById('resolutionPhoto').value = '';
-        stopAdminCameraStream();
-
-        const modal = bootstrap.Modal.getInstance(document.getElementById('adminCameraModal'));
-        if (modal) modal.hide();
     }
 
     function handleAdminFileUpload(input) {
@@ -545,13 +464,110 @@
     function removeAdminPhoto() {
         document.getElementById('resolutionPhoto').value = '';
         document.getElementById('cameraResolutionBase64').value = '';
-        document.getElementById('adminPhotoPreviewContainer').classList.add('d-none');
         document.getElementById('adminPhotoPreviewImg').src = '';
+        document.getElementById('adminPhotoPreviewContainer').classList.add('d-none');
     }
 
-    document.getElementById('adminCameraModal').addEventListener('hidden.bs.modal', function () {
+    // --- ADMIN CAMERA LOGIC ---
+    let adminStream = null;
+    let currentAdminFacingMode = 'environment';
+    let adminCapturedBase64 = null;
+
+    function openAdminCameraModal() {
+        const modal = new bootstrap.Modal(document.getElementById('adminCameraModal'));
+        modal.show();
+        startAdminCamera(currentAdminFacingMode);
+    }
+
+    async function startAdminCamera(facingMode) {
+        const statusMsg = document.getElementById('adminCameraStatusMsg');
+        const video = document.getElementById('adminCameraVideo');
+
+        if (adminStream) {
+            adminStream.getTracks().forEach(t => t.stop());
+        }
+
+        try {
+            statusMsg.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Accessing camera...';
+            const constraints = {
+                video: {
+                    facingMode: { ideal: facingMode },
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            };
+
+            adminStream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = adminStream;
+            video.play();
+            statusMsg.innerHTML = '<span class="text-success"><i class="fa-solid fa-circle-check me-1"></i> Camera active</span>';
+
+            document.getElementById('adminVideoContainer').classList.remove('d-none');
+            document.getElementById('adminCapturedPreviewContainer').classList.add('d-none');
+            document.getElementById('adminSnapBtn').classList.remove('d-none');
+            document.getElementById('adminRetakeBtn').classList.add('d-none');
+            document.getElementById('adminUsePhotoBtn').classList.add('d-none');
+        } catch (err) {
+            console.error('Camera access failed:', err);
+            statusMsg.innerHTML = `<span class="text-warning"><i class="fa-solid fa-triangle-exclamation me-1"></i> Camera unavailable: ${err.message}. Please use file upload.</span>`;
+        }
+    }
+
+    function switchAdminCamera() {
+        currentAdminFacingMode = currentAdminFacingMode === 'environment' ? 'user' : 'environment';
+        startAdminCamera(currentAdminFacingMode);
+    }
+
+    function snapAdminPhoto() {
+        const video = document.getElementById('adminCameraVideo');
+        const canvas = document.getElementById('adminCameraCanvas');
+        const flash = document.getElementById('adminShutterFlash');
+
+        flash.classList.add('flash-active');
+        setTimeout(() => flash.classList.remove('flash-active'), 150);
+
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        adminCapturedBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+        document.getElementById('adminModalCapturedImg').src = adminCapturedBase64;
+        document.getElementById('adminVideoContainer').classList.add('d-none');
+        document.getElementById('adminCapturedPreviewContainer').classList.remove('d-none');
+
+        document.getElementById('adminSnapBtn').classList.add('d-none');
+        document.getElementById('adminRetakeBtn').classList.remove('d-none');
+        document.getElementById('adminUsePhotoBtn').classList.remove('d-none');
+    }
+
+    function retakeAdminPhoto() {
+        document.getElementById('adminVideoContainer').classList.remove('d-none');
+        document.getElementById('adminCapturedPreviewContainer').classList.add('d-none');
+        document.getElementById('adminSnapBtn').classList.remove('d-none');
+        document.getElementById('adminRetakeBtn').classList.add('d-none');
+        document.getElementById('adminUsePhotoBtn').classList.add('d-none');
+    }
+
+    function confirmAdminCameraPhoto() {
+        if (adminCapturedBase64) {
+            document.getElementById('cameraResolutionBase64').value = adminCapturedBase64;
+            document.getElementById('adminPhotoPreviewImg').src = adminCapturedBase64;
+            document.getElementById('adminPhotoPreviewContainer').classList.remove('d-none');
+            document.getElementById('resolutionPhoto').value = '';
+        }
         stopAdminCameraStream();
-    });
+        bootstrap.Modal.getInstance(document.getElementById('adminCameraModal')).hide();
+    }
+
+    function stopAdminCameraStream() {
+        if (adminStream) {
+            adminStream.getTracks().forEach(t => t.stop());
+            adminStream = null;
+        }
+    }
 </script>
 
 </body>

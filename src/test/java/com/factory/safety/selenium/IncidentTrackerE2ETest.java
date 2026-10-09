@@ -13,7 +13,9 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 
@@ -165,13 +167,19 @@ public class IncidentTrackerE2ETest {
 
             // 2. Logout
             driver.get("http://localhost:" + port + "/logout");
-            assertTrue(driver.getCurrentUrl().contains("/login"), "Logout should redirect to login page");
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+            wait.until(ExpectedConditions.urlContains("/login"));
 
             // 3. Admin Sign In
-            driver.findElement(By.id("username")).sendKeys("admin");
-            driver.findElement(By.id("password")).sendKeys("admin123");
+            WebElement adminUser = wait.until(ExpectedConditions.elementToBeClickable(By.id("username")));
+            adminUser.clear();
+            adminUser.sendKeys("admin");
+            WebElement adminPass = driver.findElement(By.id("password"));
+            adminPass.clear();
+            adminPass.sendKeys("admin123");
             driver.findElement(By.cssSelector("button[type='submit']")).click();
 
+            wait.until(ExpectedConditions.urlContains("/incidents"));
             assertTrue(driver.getCurrentUrl().contains("/incidents"), "Admin should land on incidents dashboard");
             String adminPageSource = driver.getPageSource();
             assertTrue(adminPageSource.contains("Admin Console") || adminPageSource.contains("admin"), "Admin console indicator should be present");

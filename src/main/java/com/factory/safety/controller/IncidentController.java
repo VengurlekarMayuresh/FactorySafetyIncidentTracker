@@ -75,6 +75,16 @@ public class IncidentController {
         model.addAttribute("closedCount", incidentService.countClosedIncidents());
         model.addAttribute("criticalCount", incidentService.countUnresolvedHighSeverity());
 
+        // Expose worker/user specific counts
+        if (currentUser != null) {
+            List<Incident> myIncidents = incidentService.getIncidentsByReportedBy(currentUser.getUsername());
+            long myOpen = myIncidents.stream().filter(i -> i.getStatus() != Status.CLOSED).count();
+            long myClosed = myIncidents.stream().filter(i -> i.getStatus() == Status.CLOSED).count();
+            model.addAttribute("myOpenCount", myOpen);
+            model.addAttribute("myClosedCount", myClosed);
+            model.addAttribute("myTotalCount", myIncidents.size());
+        }
+
         return "incidents/list";
     }
 
@@ -140,11 +150,27 @@ public class IncidentController {
         return "redirect:/incidents/" + id;
     }
 
+    @PostMapping("/{id}/close")
+    public String closeIncident(@PathVariable Long id, HttpSession session) {
+        User currentUser = ensureSessionUser(session);
+        if (currentUser != null) {
+            Incident incident = incidentService.getIncidentById(id);
+            if (incident != null && (currentUser.isAdmin() || currentUser.getUsername().equalsIgnoreCase(incident.getReportedBy()))) {
+                String actor = currentUser.isAdmin() ? "Safety Officer (" + currentUser.getUsername() + ")" : "Reporter (" + currentUser.getUsername() + ")";
+                incidentService.resolveIncident(id, Status.CLOSED, "Request marked closed by " + actor, currentUser.getUsername(), null, null);
+            }
+        }
+        return "redirect:/incidents/" + id;
+    }
+
     @PostMapping("/{id}/delete")
     public String deleteIncident(@PathVariable Long id, HttpSession session) {
-        User currentUser = (User) session.getAttribute("currentUser");
-        if (currentUser != null && currentUser.isAdmin()) {
-            incidentService.deleteIncident(id);
+        User currentUser = ensureSessionUser(session);
+        if (currentUser != null) {
+            Incident incident = incidentService.getIncidentById(id);
+            if (incident != null && (currentUser.isAdmin() || currentUser.getUsername().equalsIgnoreCase(incident.getReportedBy()))) {
+                incidentService.deleteIncident(id);
+            }
         }
         return "redirect:/incidents";
     }
