@@ -147,4 +147,92 @@ public class IncidentTrackerE2ETest {
             throw e;
         }
     }
+
+    @Test
+    void testUserAuthenticationAndRoleJourney(TestInfo testInfo) {
+        try {
+            String loginUrl = "http://localhost:" + port + "/login";
+            driver.get(loginUrl);
+
+            // 1. Worker Sign In
+            driver.findElement(By.id("username")).sendKeys("worker1");
+            driver.findElement(By.id("password")).sendKeys("worker123");
+            driver.findElement(By.cssSelector("button[type='submit']")).click();
+
+            assertTrue(driver.getCurrentUrl().contains("/incidents"), "Worker should land on incidents dashboard");
+            String pageSource = driver.getPageSource();
+            assertTrue(pageSource.contains("Worker Portal") || pageSource.contains("worker1"), "Worker portal indicator should be present");
+
+            // 2. Logout
+            driver.get("http://localhost:" + port + "/logout");
+            assertTrue(driver.getCurrentUrl().contains("/login"), "Logout should redirect to login page");
+
+            // 3. Admin Sign In
+            driver.findElement(By.id("username")).sendKeys("admin");
+            driver.findElement(By.id("password")).sendKeys("admin123");
+            driver.findElement(By.cssSelector("button[type='submit']")).click();
+
+            assertTrue(driver.getCurrentUrl().contains("/incidents"), "Admin should land on incidents dashboard");
+            String adminPageSource = driver.getPageSource();
+            assertTrue(adminPageSource.contains("Admin Console") || adminPageSource.contains("admin"), "Admin console indicator should be present");
+        } catch (AssertionError | Exception e) {
+            takeScreenshot(testInfo.getDisplayName());
+            throw e;
+        }
+    }
+
+    @Test
+    void testAdminResolutionAndWorkDoneJourney(TestInfo testInfo) {
+        try {
+            // Log in as Admin first
+            driver.get("http://localhost:" + port + "/demo-login?role=ADMIN");
+            
+            // Navigate to an existing incident detail page
+            driver.get("http://localhost:" + port + "/incidents/1");
+            
+            String detailSource = driver.getPageSource();
+            assertTrue(detailSource.contains("Hazard Report Information") || detailSource.contains("Incident Information"), "Incident details should load");
+
+            // Verify admin management section is present
+            WebElement statusSelect = driver.findElement(By.id("status"));
+            Select select = new Select(statusSelect);
+            select.selectByValue("CLOSED");
+
+            WebElement notesInput = driver.findElement(By.id("resolutionNotes"));
+            notesInput.clear();
+            notesInput.sendKeys("Remediation verified by automated Selenium suite. Hazard eliminated.");
+
+            // Submit resolution
+            WebElement updateBtn = driver.findElement(By.cssSelector("#adminResolutionForm button[type='submit']"));
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", updateBtn);
+            try {
+                updateBtn.click();
+            } catch (org.openqa.selenium.ElementClickInterceptedException e) {
+                ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", updateBtn);
+            }
+
+            // Verify status is CLOSED and notes are updated
+            String updatedSource = driver.getPageSource();
+            assertTrue(updatedSource.contains("CLOSED"), "Incident status should be CLOSED after admin update");
+            assertTrue(updatedSource.contains("Remediation verified by automated Selenium suite"), "Resolution notes should be visible on page");
+        } catch (AssertionError | Exception e) {
+            takeScreenshot(testInfo.getDisplayName());
+            throw e;
+        }
+    }
+
+    @Test
+    void testNotificationDropdownInteraction(TestInfo testInfo) {
+        try {
+            driver.get(baseUrl);
+            WebElement bellBtn = driver.findElement(By.cssSelector(".notification-btn, #notificationDropdownBtn"));
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", bellBtn);
+
+            WebElement dropdown = driver.findElement(By.cssSelector(".notification-dropdown"));
+            assertTrue(dropdown.isDisplayed() || driver.getPageSource().contains("Notifications"), "Notifications dropdown should open");
+        } catch (AssertionError | Exception e) {
+            takeScreenshot(testInfo.getDisplayName());
+            throw e;
+        }
+    }
 }
