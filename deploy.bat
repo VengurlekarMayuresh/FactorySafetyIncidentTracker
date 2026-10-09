@@ -51,7 +51,7 @@ if not exist "target\%JAR_NAME%" (
 
 REM Copy JAR
 echo [2/3] Copying JAR to %DEPLOY_DIR%...
-copy /Y "target\%JAR_NAME%" "%APP_JAR%"
+copy /Y "target\%JAR_NAME%" "%APP_JAR%" >nul
 
 REM Stop any existing app on that port
 echo [3/3] Stopping any existing process on port %PORT%...
@@ -60,8 +60,8 @@ for /f "tokens=5" %%a in ('netstat -aon ^| findstr :%PORT% ^| findstr LISTENING 
     taskkill /PID %%a /F >nul 2>&1
 )
 
-REM Allow port release
-timeout /t 2 /nobreak >nul 2>&1
+REM Safe pause for port release (using ping instead of timeout to support non-interactive Jenkins)
+ping 127.0.0.1 -n 3 >nul
 
 REM Start the application as an independent background daemon
 echo Starting application on port %PORT%...
@@ -73,3 +73,5 @@ echo  Application background startup initiated!
 echo  URL  : http://localhost:%PORT%/incidents
 echo  Logs : %LOG_FILE%
 echo ============================================
+
+exit /b 0

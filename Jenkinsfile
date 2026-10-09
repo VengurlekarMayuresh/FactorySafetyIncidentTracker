@@ -82,11 +82,7 @@ pipeline {
                 echo "============================================="
                 echo " Stage: Deploy to ${params.ENV} (Port: ${params.APP_PORT})"
                 echo "============================================="
-                bat """
-                    set JENKINS_NODE_COOKIE=dontKillMe
-                    set BUILD_ID=dontKillMe
-                    call deploy.bat ${params.ENV} ${params.APP_PORT}
-                """
+                bat "deploy.bat ${params.ENV} ${params.APP_PORT}"
             }
         }
 
@@ -96,12 +92,8 @@ pipeline {
                 echo " Stage: Health Check & Verification"
                 echo "============================================="
                 echo "Probing application health on port ${params.APP_PORT}..."
-                script {
-                    sleep time: 8, unit: 'SECONDS'
-                    bat """
-                        curl.exe -s -I http://localhost:${params.APP_PORT}/incidents || echo Waiting for service to finish initializing...
-                    """
-                }
+                sleep time: 8, unit: 'SECONDS'
+                bat "curl.exe -s -o nul -w \"HTTP Status: %%{http_code}\" http://localhost:${params.APP_PORT}/incidents || exit /b 0"
             }
         }
     }

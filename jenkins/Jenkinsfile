@@ -60,18 +60,14 @@ pipeline {
                 expression { currentBuild.currentResult == 'SUCCESS' }
             }
             steps {
-                bat """
-                    set JENKINS_NODE_COOKIE=dontKillMe
-                    set BUILD_ID=dontKillMe
-                    call deploy.bat ${params.ENV} ${params.APP_PORT}
-                """
+                bat "deploy.bat ${params.ENV} ${params.APP_PORT}"
             }
         }
 
         stage('Health Check') {
             steps {
                 sleep time: 8, unit: 'SECONDS'
-                bat "curl.exe -s -I http://localhost:${params.APP_PORT}/incidents || echo Waiting for service..."
+                bat "curl.exe -s -o nul -w \"HTTP Status: %%{http_code}\" http://localhost:${params.APP_PORT}/incidents || exit /b 0"
             }
         }
     }
