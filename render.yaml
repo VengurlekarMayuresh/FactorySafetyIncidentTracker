@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: factory-safety-tracker
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /incidents
+    envVars:
+      - key: PORT
+        value: "8080"
+      - key: CLOUDINARY_CLOUD_NAME
+        value: ds20dwlrs
+      - key: CLOUDINARY_API_KEY
+        value: "352138977813842"
+      - key: CLOUDINARY_API_SECRET
+        value: 6E-paKyWXggniEdu_AQS97IJJcA
