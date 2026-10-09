@@ -6,6 +6,10 @@ REM  Example: deploy.bat dev 8080
 REM           deploy.bat staging 8081
 REM ============================================================
 
+REM Prevent Jenkins from terminating background process upon build finish
+set JENKINS_NODE_COOKIE=dontKillMe
+set BUILD_ID=dontKillMe
+
 set ENV=%1
 set PORT=%2
 
@@ -33,12 +37,16 @@ echo ============================================
 REM Create deploy directory
 if not exist "%DEPLOY_DIR%" mkdir "%DEPLOY_DIR%"
 
-REM Build fresh JAR
-echo [1/3] Building application...
-call mvnw.cmd clean package -DskipTests -Dspring.profiles.active=%ENV%
-IF ERRORLEVEL 1 (
-    echo [ERROR] Build FAILED. Aborting deploy.
-    exit /b 1
+REM Check if JAR already built, otherwise build it
+if not exist "target\%JAR_NAME%" (
+    echo [1/3] Building application...
+    call mvnw.cmd package -DskipTests -Dspring.profiles.active=%ENV%
+    IF ERRORLEVEL 1 (
+        echo [ERROR] Build FAILED. Aborting deploy.
+        exit /b 1
+    )
+) else (
+    echo [1/3] Using existing target\%JAR_NAME% artifact...
 )
 
 REM Copy JAR
@@ -48,21 +56,20 @@ copy /Y "target\%JAR_NAME%" "%APP_JAR%"
 REM Stop any existing app on that port
 echo [3/3] Stopping any existing process on port %PORT%...
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr :%PORT% ^| findstr LISTENING 2^>nul') do (
-    echo Killing PID %%a
+    echo Killing existing PID %%a
     taskkill /PID %%a /F >nul 2>&1
 )
 
-REM Start the application
+REM Allow port release
+timeout /t 2 /nobreak >nul 2>&1
+
+REM Start the application as an independent background daemon
 echo Starting application on port %PORT%...
-start /B javaw -jar "%APP_JAR%" ^
-    --server.port=%PORT% ^
-    --spring.profiles.active=%ENV% ^
-    > "%LOG_FILE%" 2>&1
+start "SafetyTracker-%ENV%" javaw -jar "%APP_JAR%" --server.port=%PORT% --spring.profiles.active=%ENV% > "%LOG_FILE%" 2>&1
 
 echo.
 echo ============================================
-echo  Application starting up!
+echo  Application background startup initiated!
 echo  URL  : http://localhost:%PORT%/incidents
 echo  Logs : %LOG_FILE%
-echo  Wait 10-15 seconds then open the URL.
 echo ============================================

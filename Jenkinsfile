@@ -15,9 +15,10 @@ pipeline {
     }
 
     environment {
-        APP_NAME   = 'factory-safety-incident-tracker'
-        JAR_NAME   = 'incident-tracker-0.0.1-SNAPSHOT.jar'
-        IMAGE_NAME = 'factory-safety-incident-tracker'
+        APP_NAME              = 'factory-safety-incident-tracker'
+        JAR_NAME              = 'incident-tracker-0.0.1-SNAPSHOT.jar'
+        JENKINS_NODE_COOKIE   = 'dontKillMe'
+        BUILD_ID              = 'dontKillMe'
     }
 
     stages {
@@ -50,9 +51,7 @@ pipeline {
             }
             post {
                 always {
-                    // Publish JUnit XML test results to Jenkins UI
                     junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
-                    // Archive any test failure screenshots
                     archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
                 }
                 failure {
@@ -70,7 +69,6 @@ pipeline {
             }
             post {
                 success {
-                    // Archive compiled production artifact
                     archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
                 }
             }
@@ -84,7 +82,11 @@ pipeline {
                 echo "============================================="
                 echo " Stage: Deploy to ${params.ENV} (Port: ${params.APP_PORT})"
                 echo "============================================="
-                bat "deploy.bat ${params.ENV} ${params.APP_PORT}"
+                bat """
+                    set JENKINS_NODE_COOKIE=dontKillMe
+                    set BUILD_ID=dontKillMe
+                    call deploy.bat ${params.ENV} ${params.APP_PORT}
+                """
             }
         }
 
@@ -93,11 +95,13 @@ pipeline {
                 echo "============================================="
                 echo " Stage: Health Check & Verification"
                 echo "============================================="
-                echo "Waiting 10 seconds for Spring Boot service to initialize on port ${params.APP_PORT}..."
-                sleep time: 10, unit: 'SECONDS'
-                bat """
-                    curl.exe -s -I http://localhost:${params.APP_PORT}/incidents || echo Application booting up...
-                """
+                echo "Probing application health on port ${params.APP_PORT}..."
+                script {
+                    sleep time: 8, unit: 'SECONDS'
+                    bat """
+                        curl.exe -s -I http://localhost:${params.APP_PORT}/incidents || echo Waiting for service to finish initializing...
+                    """
+                }
             }
         }
     }
@@ -107,6 +111,7 @@ pipeline {
             echo "========================================================"
             echo " PIPELINE SUCCESS - Build #${BUILD_NUMBER}"
             echo " Application running at: http://localhost:${params.APP_PORT}/incidents"
+            echo " Log file at: C:\\deploy\\${params.ENV}\\app.log"
             echo "========================================================"
         }
         failure {
