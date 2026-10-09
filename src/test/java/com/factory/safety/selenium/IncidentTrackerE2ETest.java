@@ -101,12 +101,32 @@ public class IncidentTrackerE2ETest {
         }
     }
 
+    private void loginAs(String username, String password) {
+        driver.get("http://localhost:" + port + "/login");
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebElement userField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")));
+        userField.clear();
+        userField.sendKeys(username);
+        WebElement passField = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("password")));
+        passField.clear();
+        passField.sendKeys(password);
+        WebElement submitBtn = driver.findElement(By.cssSelector("button[type='submit']"));
+        ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", submitBtn);
+        wait.until(ExpectedConditions.urlContains("/incidents"));
+    }
+
     @Test
     void testCreateNewIncidentJourney(TestInfo testInfo) {
         try {
+            // 1. Verify unauthenticated access redirects to login
+            driver.get(baseUrl);
+            assertTrue(driver.getCurrentUrl().contains("/login"), "Unauthenticated user must be redirected to login");
+
+            // 2. Sign in as worker
+            loginAs("worker1", "worker123");
             driver.get(baseUrl);
             
-            WebElement newButton = driver.findElement(By.linkText("+ Log New Incident"));
+            WebElement newButton = driver.findElement(By.partialLinkText("Log New Incident"));
             newButton.click();
             
             driver.findElement(By.id("title")).sendKeys("Automated UI Test Incident");
@@ -115,8 +135,6 @@ public class IncidentTrackerE2ETest {
             
             Select severitySelect = new Select(driver.findElement(By.id("severity")));
             severitySelect.selectByValue("HIGH");
-            
-            driver.findElement(By.id("reportedBy")).sendKeys("SeleniumBot");
             
             // Submitting the form - deliberately searching for element id="submit"
             WebElement submitButton = driver.findElement(By.id("submit"));
@@ -141,6 +159,7 @@ public class IncidentTrackerE2ETest {
     @Test
     void testDashboardViewAndFilterJourney(TestInfo testInfo) {
         try {
+            loginAs("worker1", "worker123");
             driver.get(baseUrl);
             WebElement header = driver.findElement(By.tagName("h2"));
             assertTrue(header.getText().contains("Dashboard"), "Header should contain 'Dashboard'");
@@ -195,8 +214,8 @@ public class IncidentTrackerE2ETest {
     @Test
     void testAdminResolutionAndWorkDoneJourney(TestInfo testInfo) {
         try {
-            // Log in as Admin first
-            driver.get("http://localhost:" + port + "/demo-login?role=ADMIN");
+            // Log in as Admin first (Mayuresh / mayu)
+            loginAs("mayu", "mayu");
             
             // Navigate to an existing incident detail page
             driver.get("http://localhost:" + port + "/incidents/1");
@@ -235,6 +254,7 @@ public class IncidentTrackerE2ETest {
     @Test
     void testNotificationDropdownInteraction(TestInfo testInfo) {
         try {
+            loginAs("worker1", "worker123");
             driver.get(baseUrl);
             WebElement bellBtn = driver.findElement(By.cssSelector(".notification-btn, #notificationDropdownBtn"));
             ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", bellBtn);

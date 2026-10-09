@@ -29,15 +29,8 @@ public class IncidentController {
         this.userService = userService;
     }
 
-    private User ensureSessionUser(HttpSession session) {
-        User currentUser = (User) session.getAttribute("currentUser");
-        if (currentUser == null) {
-            // Default to worker1 if not explicitly logged in, so tests and quick navigation work smoothly
-            currentUser = userService.findByUsername("worker1")
-                    .orElseGet(() -> new User("worker1", "worker123", "Rajesh Sharma", Role.USER, "Machining Workshop"));
-            session.setAttribute("currentUser", currentUser);
-        }
-        return currentUser;
+    private User getAuthenticatedUser(HttpSession session) {
+        return (User) session.getAttribute("currentUser");
     }
 
     @GetMapping
@@ -49,7 +42,10 @@ public class IncidentController {
             HttpSession session,
             Model model) {
         
-        User currentUser = ensureSessionUser(session);
+        User currentUser = getAuthenticatedUser(session);
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
 
         List<Incident> incidents;
         if ("my".equalsIgnoreCase(view) && currentUser != null) {
@@ -90,11 +86,12 @@ public class IncidentController {
 
     @GetMapping("/new")
     public String showCreateForm(HttpSession session, Model model) {
-        User currentUser = ensureSessionUser(session);
-        Incident incident = new Incident();
-        if (currentUser != null) {
-            incident.setReportedBy(currentUser.getUsername());
+        User currentUser = getAuthenticatedUser(session);
+        if (currentUser == null) {
+            return "redirect:/login";
         }
+        Incident incident = new Incident();
+        incident.setReportedBy(currentUser.getUsername());
         model.addAttribute("incident", incident);
         model.addAttribute("severities", Severity.values());
         return "incidents/create";
@@ -107,22 +104,21 @@ public class IncidentController {
             @RequestParam(value = "cameraPhotoBase64", required = false) String cameraPhotoBase64,
             HttpSession session) {
 
-        User currentUser = (User) session.getAttribute("currentUser");
-        if (incident.getReportedBy() == null || incident.getReportedBy().trim().isEmpty()) {
-            if (currentUser != null) {
-                incident.setReportedBy(currentUser.getUsername());
-            } else {
-                incident.setReportedBy("Anonymous");
-            }
+        User currentUser = getAuthenticatedUser(session);
+        if (currentUser == null) {
+            return "redirect:/login";
         }
-
+        incident.setReportedBy(currentUser.getUsername());
         incidentService.createIncidentWithPhoto(incident, photo, cameraPhotoBase64);
         return "redirect:/incidents";
     }
 
     @GetMapping("/{id}")
     public String viewIncident(@PathVariable Long id, HttpSession session, Model model) {
-        ensureSessionUser(session);
+        User currentUser = getAuthenticatedUser(session);
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
         model.addAttribute("incident", incidentService.getIncidentById(id));
         model.addAttribute("statuses", Status.values());
         return "incidents/detail";
@@ -138,39 +134,43 @@ public class IncidentController {
             @RequestParam(value = "cameraResolutionBase64", required = false) String cameraResolutionBase64,
             HttpSession session) {
 
+        User currentUser = getAuthenticatedUser(session);
+        if (currentUser == null || !currentUser.isAdmin()) {
+            return "redirect:/login";
+        }
+
         Status targetStatus = status != null ? status : newStatus;
         if (targetStatus == null) {
             targetStatus = Status.OPEN;
         }
 
-        User currentUser = (User) session.getAttribute("currentUser");
-        String adminName = currentUser != null ? currentUser.getUsername() : "Admin";
-
-        incidentService.resolveIncident(id, targetStatus, resolutionNotes, adminName, resolutionPhoto, cameraResolutionBase64);
+        incidentService.resolveIncident(id, targetStatus, resolutionNotes, currentUser.getUsername(), resolutionPhoto, cameraResolutionBase64);
         return "redirect:/incidents/" + id;
     }
 
     @PostMapping("/{id}/close")
     public String closeIncident(@PathVariable Long id, HttpSession session) {
-        User currentUser = ensureSessionUser(session);
-        if (currentUser != null) {
-            Incident incident = incidentService.getIncidentById(id);
-            if (incident != null && (currentUser.isAdmin() || currentUser.getUsername().equalsIgnoreCase(incident.getReportedBy()))) {
-                String actor = currentUser.isAdmin() ? "Safety Officer (" + currentUser.getUsername() + ")" : "Reporter (" + currentUser.getUsername() + ")";
-                incidentService.resolveIncident(id, Status.CLOSED, "Request marked closed by " + actor, currentUser.getUsername(), null, null);
-            }
+        User currentUser = getAuthenticatedUser(session);
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+        Incident incident = incidentService.getIncidentById(id);
+        if (incident != null && (currentUser.isAdmin() || currentUser.getUsername().equalsIgnoreCase(incident.getReportedBy()))) {
+            String actor = currentUser.isAdmin() ? "Safety Officer (" + currentUser.getUsername() + ")" : "Reporter (" + currentUser.getUsername() + ")";
+            incidentService.resolveIncident(id, Status.CLOSED, "Request marked closed by " + actor, currentUser.getUsername(), null, null);
         }
         return "redirect:/incidents/" + id;
     }
 
     @PostMapping("/{id}/delete")
     public String deleteIncident(@PathVariable Long id, HttpSession session) {
-        User currentUser = ensureSessionUser(session);
-        if (currentUser != null) {
-            Incident incident = incidentService.getIncidentById(id);
-            if (incident != null && (currentUser.isAdmin() || currentUser.getUsername().equalsIgnoreCase(incident.getReportedBy()))) {
-                incidentService.deleteIncident(id);
-            }
+        User currentUser = getAuthenticatedUser(session);
+        if (currentUser == null) {
+            return "redirect:/login";
+        }
+        Incident incident = incidentService.getIncidentById(id);
+        if (incident != null && (currentUser.isAdmin() || currentUser.getUsername().equalsIgnoreCase(incident.getReportedBy()))) {
+            incidentService.deleteIncident(id);
         }
         return "redirect:/incidents";
     }
