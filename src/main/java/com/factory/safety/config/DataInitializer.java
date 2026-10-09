@@ -19,19 +19,32 @@ public class DataInitializer {
             IncidentRepository incidentRepository,
             NotificationService notificationService) {
         return args -> {
-            // Seed Admin User
-            User admin = null;
-            if (!userRepository.existsByUsername("admin")) {
-                admin = new User("admin", "admin123", "Site Safety Director", Role.ADMIN, "EHS Department");
-                userRepository.save(admin);
-            }
+            // 1. Seed Primary Admin: Mayuresh (mayu / mayu)
+            User mayu = userRepository.findByUsername("mayu").orElseGet(User::new);
+            mayu.setUsername("mayu");
+            mayu.setPassword("mayu");
+            mayu.setFullName("Mayuresh");
+            mayu.setRole(Role.ADMIN);
+            mayu.setDepartment("Factory Safety Management");
+            userRepository.save(mayu);
 
-            // Seed Worker User
-            User worker = null;
-            if (!userRepository.existsByUsername("worker1")) {
-                worker = new User("worker1", "worker123", "Rajesh Sharma", Role.USER, "Machining Workshop");
-                userRepository.save(worker);
-            }
+            // 2. Ensure Automated System Admin (admin / admin123)
+            User admin = userRepository.findByUsername("admin").orElseGet(User::new);
+            admin.setUsername("admin");
+            admin.setPassword("admin123");
+            admin.setFullName("Site Safety Director");
+            admin.setRole(Role.ADMIN);
+            admin.setDepartment("EHS Department");
+            userRepository.save(admin);
+
+            // 3. Ensure Default Worker (worker1 / worker123)
+            User worker = userRepository.findByUsername("worker1").orElseGet(User::new);
+            worker.setUsername("worker1");
+            worker.setPassword("worker123");
+            worker.setFullName("Rajesh Sharma");
+            worker.setRole(Role.USER);
+            worker.setDepartment("Machining Workshop");
+            userRepository.save(worker);
 
             // Seed sample incidents if none exist
             if (incidentRepository.count() == 0) {

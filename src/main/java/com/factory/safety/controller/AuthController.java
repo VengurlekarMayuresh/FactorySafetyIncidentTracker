@@ -71,7 +71,6 @@ public class AuthController {
             return "redirect:/incidents";
         }
         model.addAttribute("user", new User());
-        model.addAttribute("roles", Role.values());
         return "auth/register";
     }
 
@@ -79,16 +78,15 @@ public class AuthController {
     public String processRegister(@RequestParam String username,
                                   @RequestParam String password,
                                   @RequestParam String fullName,
-                                  @RequestParam(defaultValue = "USER") Role role,
-                                  @RequestParam(required = false) String department,
+                                  @RequestParam(required = false, defaultValue = "Plant Operations") String department,
                                   Model model) {
         if (userService.existsByUsername(username)) {
             model.addAttribute("errorMessage", "Username '" + username + "' is already taken.");
-            model.addAttribute("roles", Role.values());
             return "auth/register";
         }
 
-        User newUser = new User(username, password, fullName, role, department);
+        // Only standard worker/user accounts can be registered. Admin accounts are provisioned via DB.
+        User newUser = new User(username, password, fullName, Role.USER, department);
         userService.register(newUser);
         return "redirect:/login?registered=true";
     }

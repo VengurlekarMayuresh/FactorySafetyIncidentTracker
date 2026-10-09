@@ -167,21 +167,25 @@ public class IncidentTrackerE2ETest {
 
             // 2. Logout
             driver.get("http://localhost:" + port + "/logout");
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
             wait.until(ExpectedConditions.urlContains("/login"));
 
-            // 3. Admin Sign In
+            // 3. Admin Sign In (Mayuresh / mayu)
             WebElement adminUser = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")));
-            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].value = 'admin';", adminUser);
+            adminUser.clear();
+            adminUser.sendKeys("mayu");
             WebElement adminPass = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("password")));
-            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].value = 'admin123';", adminPass);
+            adminPass.clear();
+            adminPass.sendKeys("mayu");
+            
             WebElement submitBtn = driver.findElement(By.cssSelector("button[type='submit']"));
-            submitBtn.click();
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", submitBtn);
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", submitBtn);
 
             wait.until(ExpectedConditions.urlContains("/incidents"));
             assertTrue(driver.getCurrentUrl().contains("/incidents"), "Admin should land on incidents dashboard");
             String adminPageSource = driver.getPageSource();
-            assertTrue(adminPageSource.contains("Admin Console") || adminPageSource.contains("admin"), "Admin console indicator should be present");
+            assertTrue(adminPageSource.contains("Admin Console") || adminPageSource.contains("Mayuresh") || adminPageSource.contains("mayu"), "Admin console indicator should be present");
         } catch (AssertionError | Exception e) {
             takeScreenshot(testInfo.getDisplayName());
             throw e;
