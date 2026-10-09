@@ -171,13 +171,12 @@ public class IncidentTrackerE2ETest {
             wait.until(ExpectedConditions.urlContains("/login"));
 
             // 3. Admin Sign In
-            WebElement adminUser = wait.until(ExpectedConditions.elementToBeClickable(By.id("username")));
-            adminUser.clear();
-            adminUser.sendKeys("admin");
-            WebElement adminPass = driver.findElement(By.id("password"));
-            adminPass.clear();
-            adminPass.sendKeys("admin123");
-            driver.findElement(By.cssSelector("button[type='submit']")).click();
+            WebElement adminUser = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("username")));
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].value = 'admin';", adminUser);
+            WebElement adminPass = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("password")));
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].value = 'admin123';", adminPass);
+            WebElement submitBtn = driver.findElement(By.cssSelector("button[type='submit']"));
+            submitBtn.click();
 
             wait.until(ExpectedConditions.urlContains("/incidents"));
             assertTrue(driver.getCurrentUrl().contains("/incidents"), "Admin should land on incidents dashboard");
