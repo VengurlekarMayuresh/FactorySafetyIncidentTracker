@@ -5,10 +5,10 @@ services:
     plan: free
     region: oregon
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /incidents
+    healthCheckPath: /login
     envVars:
       - key: PORT
-        value: "8080"
+        value: "10000"
       - key: CLOUDINARY_CLOUD_NAME
         value: ds20dwlrs
       - key: CLOUDINARY_API_KEY

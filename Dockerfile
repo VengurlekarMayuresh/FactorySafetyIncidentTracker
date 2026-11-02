@@ -25,8 +25,8 @@ RUN mkdir -p /app/data /app/uploads
 COPY --from=builder /app/target/incident-tracker-*.jar app.jar
 
 # Render injects $PORT environment variable automatically
-ENV PORT=8080
-EXPOSE 8080
+ENV PORT=10000
+EXPOSE 10000
 
 # Production container flags: respect cgroup memory limits (Render Free tier: 512MB)
-ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "java -XX:+UseContainerSupport -Xmx256m -Xss512k -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom -jar app.jar --server.port=${PORT:-10000} --server.address=0.0.0.0"]
