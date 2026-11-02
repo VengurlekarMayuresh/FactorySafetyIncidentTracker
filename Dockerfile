@@ -29,4 +29,4 @@ ENV PORT=10000
 EXPOSE 10000
 
 # Production container flags: respect cgroup memory limits (Render Free tier: 512MB)
-ENTRYPOINT ["sh", "-c", "java -XX:+UseContainerSupport -Xmx256m -Xss512k -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom -jar app.jar --server.port=${PORT:-10000} --server.address=0.0.0.0"]
+ENTRYPOINT ["sh", "-c", "java -XX:+UseContainerSupport -Xms128m -Xmx350m -Xss256k -XX:MaxMetaspaceSize=128m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom -jar app.jar --server.port=${PORT:-10000} --server.address=0.0.0.0"]
