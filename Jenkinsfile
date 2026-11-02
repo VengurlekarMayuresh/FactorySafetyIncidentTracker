@@ -1,116 +1,138 @@
-pipeline {
-    agent any
-
-    parameters {
-        choice(
-            name: 'ENV',
-            choices: ['dev', 'staging'],
-            description: 'Target deployment environment'
-        )
-        string(
-            name: 'APP_PORT',
-            defaultValue: '8080',
-            description: 'Port for the deployed application (dev: 8080, staging: 8081)'
-        )
-    }
-
-    environment {
-        APP_NAME              = 'factory-safety-incident-tracker'
-        JAR_NAME              = 'incident-tracker-0.0.1-SNAPSHOT.jar'
-        JENKINS_NODE_COOKIE   = 'dontKillMe'
-        BUILD_ID              = 'dontKillMe'
-    }
-
-    stages {
-        stage('Checkout') {
-            steps {
-                echo "============================================="
-                echo " Stage: Checkout"
-                echo " Build ID: ${BUILD_NUMBER}"
-                echo " Environment: ${params.ENV} | Port: ${params.APP_PORT}"
-                echo "============================================="
-                bat 'echo Source code workspace ready.'
-            }
-        }
-
-        stage('Compile') {
-            steps {
-                echo "============================================="
-                echo " Stage: Compile Application"
-                echo "============================================="
-                bat './mvnw.cmd clean compile'
-            }
-        }
-
-        stage('Test & Quality Gate') {
-            steps {
-                echo "============================================="
-                echo " Stage: Unit & E2E Automated Tests"
-                echo "============================================="
-                bat './mvnw.cmd test'
-            }
-            post {
-                always {
-                    junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
-                    archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
-                }
-                failure {
-                    echo "Quality Gate FAILED - Automated tests did not pass. Halting pipeline."
-                }
-            }
-        }
-
-        stage('Package') {
-            steps {
-                echo "============================================="
-                echo " Stage: Package Executable JAR"
-                echo "============================================="
-                bat "./mvnw.cmd package -DskipTests -Dspring.profiles.active=${params.ENV}"
-            }
-            post {
-                success {
-                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-                }
-            }
-        }
-
-        stage('Deploy') {
-            when {
-                expression { currentBuild.currentResult == 'SUCCESS' }
-            }
-            steps {
-                echo "============================================="
-                echo " Stage: Deploy to ${params.ENV} (Port: ${params.APP_PORT})"
-                echo "============================================="
-                bat "deploy.bat ${params.ENV} ${params.APP_PORT}"
-            }
-        }
-
-        stage('Health Check') {
-            steps {
-                echo "============================================="
-                echo " Stage: Health Check & Verification"
-                echo "============================================="
-                echo "Probing application health on port ${params.APP_PORT}..."
-                sleep time: 8, unit: 'SECONDS'
-                bat "curl.exe -s -o nul -w \"HTTP Status: %%{http_code}\" http://localhost:${params.APP_PORT}/incidents || exit /b 0"
-            }
-        }
-    }
-
-    post {
-        success {
-            echo "========================================================"
-            echo " PIPELINE SUCCESS - Build #${BUILD_NUMBER}"
-            echo " Application running at: http://localhost:${params.APP_PORT}/incidents"
-            echo " Log file at: C:\\deploy\\${params.ENV}\\app.log"
-            echo "========================================================"
-        }
-        failure {
-            echo "========================================================"
-            echo " PIPELINE FAILED - Build #${BUILD_NUMBER}"
-            echo " Inspect console output and surefire reports above."
-            echo "========================================================"
-        }
-    }
-}
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'ENV',
+            choices: ['dev', 'staging'],
+            description: 'Target deployment environment'
+        )
+        string(
+            name: 'APP_PORT',
+            defaultValue: '8080',
+            description: 'Port for the deployed application (dev: 8080, staging: 8081)'
+        )
+        booleanParam(
+            name: 'RUN_SELENIUM_INCIDENT_PIPELINE',
+            defaultValue: true,
+            description: 'Run Selenium E2E Automation (Adds info, attaches hazard image, and posts incident)'
+        )
+    }
+
+    environment {
+        APP_NAME              = 'factory-safety-incident-tracker'
+        JAR_NAME              = 'incident-tracker-0.0.1-SNAPSHOT.jar'
+        JENKINS_NODE_COOKIE   = 'dontKillMe'
+        BUILD_ID              = 'dontKillMe'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "============================================="
+                echo " Stage: Checkout"
+                echo " Build ID: ${BUILD_NUMBER}"
+                echo " Environment: ${params.ENV} | Port: ${params.APP_PORT}"
+                echo "============================================="
+                bat 'echo Source code workspace ready.'
+            }
+        }
+
+        stage('Compile') {
+            steps {
+                echo "============================================="
+                echo " Stage: Compile Application"
+                echo "============================================="
+                bat './mvnw.cmd clean compile'
+            }
+        }
+
+        stage('Test & Quality Gate') {
+            steps {
+                echo "============================================="
+                echo " Stage: Unit & E2E Automated Tests"
+                echo "============================================="
+                bat './mvnw.cmd test'
+            }
+            post {
+                always {
+                    junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
+                    archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
+                }
+                failure {
+                    echo "Quality Gate FAILED - Automated tests did not pass. Halting pipeline."
+                }
+            }
+        }
+
+        stage('Selenium Incident Pipeline') {
+            when {
+                expression { params.RUN_SELENIUM_INCIDENT_PIPELINE == true }
+            }
+            steps {
+                echo "============================================="
+                echo " Stage: Selenium E2E Incident Automation (Add Info + Add Image + Post Incident)"
+                echo "============================================="
+                bat './mvnw.cmd test -Dtest=IncidentTrackerE2ETest#testCreateNewIncidentJourney'
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'target/screenshots/*.png', allowEmptyArchive: true
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                echo "============================================="
+                echo " Stage: Package Executable JAR"
+                echo "============================================="
+                bat "./mvnw.cmd package -DskipTests -Dspring.profiles.active=${params.ENV}"
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                expression { currentBuild.currentResult == 'SUCCESS' }
+            }
+            steps {
+                echo "============================================="
+                echo " Stage: Deploy to ${params.ENV} (Port: ${params.APP_PORT})"
+                echo "============================================="
+                bat "deploy.bat ${params.ENV} ${params.APP_PORT}"
+            }
+        }
+
+        stage('Health Check') {
+            steps {
+                echo "============================================="
+                echo " Stage: Health Check & Verification"
+                echo "============================================="
+                echo "Probing application health on port ${params.APP_PORT}..."
+                sleep time: 8, unit: 'SECONDS'
+                bat "curl.exe -s -o nul -w \"HTTP Status: %%{http_code}\" http://localhost:${params.APP_PORT}/incidents || exit /b 0"
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "========================================================"
+            echo " PIPELINE SUCCESS - Build #${BUILD_NUMBER}"
+            echo " Application running at: http://localhost:${params.APP_PORT}/incidents"
+            echo " Log file at: C:\\deploy\\${params.ENV}\\app.log"
+            echo "========================================================"
+        }
+        failure {
+            echo "========================================================"
+            echo " PIPELINE FAILED - Build #${BUILD_NUMBER}"
+            echo " Inspect console output and surefire reports above."
+            echo "========================================================"
+        }
+    }
+}
