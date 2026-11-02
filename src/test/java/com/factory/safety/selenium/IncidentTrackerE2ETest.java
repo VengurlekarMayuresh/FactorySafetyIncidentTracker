@@ -260,19 +260,18 @@ public class IncidentTrackerE2ETest {
             select.selectByValue("CLOSED");
 
             WebElement notesInput = driver.findElement(By.id("resolutionNotes"));
-            notesInput.clear();
-            notesInput.sendKeys("Remediation verified by automated Selenium suite. Hazard eliminated.");
+            String noteText = "Remediation verified by automated Selenium suite. Hazard eliminated.";
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].value = arguments[1];", notesInput, noteText);
+            notesInput.sendKeys(" ");
 
-            // Submit resolution
+            // Submit resolution form
             WebElement updateBtn = driver.findElement(By.cssSelector("#adminResolutionForm button[type='submit']"));
-            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", updateBtn);
-            try {
-                updateBtn.click();
-            } catch (org.openqa.selenium.ElementClickInterceptedException e) {
-                ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", updateBtn);
-            }
+            ((org.openqa.selenium.JavascriptExecutor) driver).executeScript("arguments[0].click();", updateBtn);
+
 
             // Verify status is CLOSED and notes are updated
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+            wait.until(ExpectedConditions.textToBePresentInElementLocated(By.tagName("body"), "Remediation verified by automated Selenium suite"));
             String updatedSource = driver.getPageSource();
             assertTrue(updatedSource.contains("CLOSED"), "Incident status should be CLOSED after admin update");
             assertTrue(updatedSource.contains("Remediation verified by automated Selenium suite"), "Resolution notes should be visible on page");
