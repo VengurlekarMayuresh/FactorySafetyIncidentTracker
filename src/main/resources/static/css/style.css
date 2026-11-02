@@ -570,6 +570,44 @@ body {
         margin: 0 auto;
     }
 }
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    
+
+/* Enhanced Action Buttons & Alignment */
+.btn-warning {
+    background-color: #f59e0b !important;
+    border-color: #d97706 !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.btn-warning:hover {
+    background-color: #d97706 !important;
+    border-color: #b45309 !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(245, 158, 11, 0.4) !important;
+}
+
+.btn-warning:active {
+    transform: translateY(0);
+}
+
+.btn-danger {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35);
+}
+
+/* Polished header action bar alignment across devices */
+@media (max-width: 991.98px) {
+    .navbar-custom .dropdown-menu {
+        border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .navbar-nav .nav-link {
+        padding: 0.6rem 0.85rem !important;
+    }
+}

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SafeGuard Pro - Selenium E2E Test Suite & Live Pipeline</title>
+    <title>SafeGuard Pro - ⚡ Selenium Pipeline</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
@@ -118,7 +118,7 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link active px-3 bg-primary bg-opacity-25 rounded" th:href="@{/selenium}">
-                        <i class="fa-solid fa-vial-circle-check me-1 text-warning"></i> Selenium Suite
+                        <i class="fa-solid fa-bolt-lightning me-1 text-warning"></i> Selenium Pipeline
                     </a>
                 </li>
             </ul>
@@ -152,10 +152,10 @@
                 <div class="col-12 col-lg-8">
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <span class="pulse-dot"></span>
-                        <span class="badge bg-warning text-dark fw-bold px-2 py-1">AUTOMATED TESTING HUB</span>
+                        <span class="badge bg-warning text-dark fw-bold px-2 py-1"><i class="fa-solid fa-bolt-lightning me-1"></i>SELENIUM PIPELINE</span>
                         <span class="text-white-50 small ms-2">JUnit 5 • Selenium WebDriver 4.43.0 • Chrome Headless</span>
                     </div>
-                    <h2 class="h3 fw-bold mb-1">Selenium E2E Test Suite & Pipeline Monitor</h2>
+                    <h2 class="h3 fw-bold mb-1">⚡ Selenium Pipeline & Live Monitor</h2>
                     <p class="text-white-50 mb-0 small">
                         Real-time execution viewer for end-to-end incident workflows: form population, photo evidence attachment, DOM validation, and H2 database assertions.
                     </p>
@@ -163,7 +163,7 @@
                 <div class="col-12 col-lg-4 text-lg-end">
                     <button id="runSuiteBtn" class="btn btn-warning btn-lg fw-bold shadow px-4 py-2 text-dark" onclick="runLiveSeleniumSuite()">
                         <i id="btnIcon" class="fa-solid fa-play me-2"></i>
-                        <span id="btnText">Run Selenium Suite</span>
+                        <span id="btnText">Trigger Selenium Pipeline</span>
                     </button>
                 </div>
             </div>
@@ -231,7 +231,7 @@
             <div class="card border-0 shadow-sm h-100 p-3">
                 <div class="d-flex align-items-center justify-content-between">
                     <div>
-                        <div class="text-muted small fw-semibold">SUITE STATUS</div>
+                        <div class="text-muted small fw-semibold">PIPELINE STATUS</div>
                         <div class="h5 fw-bold text-success mb-0" id="statStatus">
                             <i class="fa-solid fa-shield-heart me-1"></i> 100% PASS
                         </div>
@@ -451,14 +451,14 @@
                     // Reset button state
                     btn.disabled = false;
                     btnIcon.className = 'fa-solid fa-play me-2';
-                    btnText.innerText = 'Run Selenium Suite Again';
+                    btnText.innerText = 'Run Selenium Pipeline Again';
                 }, 400);
             })
             .catch(err => {
-                terminal.innerHTML += `<div class="text-danger mt-2">Error executing Selenium suite: ${err.message}</div>`;
+                terminal.innerHTML += `<div class="text-danger mt-2">Error executing Selenium pipeline: ${err.message}</div>`;
                 btn.disabled = false;
                 btnIcon.className = 'fa-solid fa-play me-2';
-                btnText.innerText = 'Run Selenium Suite';
+                btnText.innerText = 'Trigger Selenium Pipeline';
             });
     }
 
